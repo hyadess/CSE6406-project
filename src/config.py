@@ -1,12 +1,28 @@
 """Configuration. Edit the paths at the top; everything else is the grid."""
+import os
+import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
 # ----------------------------------------------------------------- binaries
 # Built per INSTALL.md. Verified: IQ-TREE 2.4.0, SimPhy from adamallo/SimPhy.
-IQTREE_BIN = ROOT.parent / "iqtree-2.4.0-Linux-intel" / "bin" / "iqtree2"
-SIMPHY_BIN = ROOT.parent / "SimPhy" / "bin" / "simphy"
+# Environment variables take priority, followed by an executable in PATH and
+# finally the original repository-relative installation locations. This keeps
+# Linux installations working while allowing Conda/native macOS installations.
+def _tool_path(env_name, executable, fallback):
+    configured = os.environ.get(env_name)
+    discovered = shutil.which(executable)
+    return Path(configured or discovered or fallback)
+
+
+IQTREE_BIN = _tool_path(
+    "IQTREE_BIN", "iqtree2",
+    ROOT.parent / "iqtree-2.4.0-Linux-intel" / "bin" / "iqtree2",
+)
+SIMPHY_BIN = _tool_path(
+    "SIMPHY_BIN", "simphy", ROOT.parent / "SimPhy" / "bin" / "simphy",
+)
 
 # --------------------------------------------------------------- directories
 DATA_DIR   = ROOT / "data"

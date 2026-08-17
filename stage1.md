@@ -529,8 +529,9 @@ Two analysis arms are defined:
 | `misspecified` | JC | Deliberately removes model complexity and creates systematic bias |
 
 Both arms use the same true gene tree, generating model, sequence length and
-random seed. Assuming deterministic AliSim behavior, they therefore receive
-identical generated sequences and differ only in the IQ-TREE analysis model.
+random seed. The retained pilot alignments were compared byte-for-byte, and all
+10 correct/misspecified pairs were identical. The arms therefore differ only
+in the IQ-TREE analysis model.
 
 ### 8.2 Commands
 
@@ -565,14 +566,14 @@ The completed pilot used 21 taxa, 10 loci, one replicate and 200-bp sequences.
 
 | Condition | Branches | Error rate | Mean support on wrong branches | P(wrong and confident) |
 |---|---:|---:|---:|---:|
-| Correct | 190 | 0.516 | 0.565 | 0.026 |
-| Misspecified | 190 | 0.668 | 0.845 | 0.268 |
+| Correct | 190 | 0.516 | 0.573 | 0.021 |
+| Misspecified | 190 | 0.674 | 0.841 | 0.274 |
 
 In the ≥0.99 support bin:
 
-- Correct model: 33/33 branches correct.
-- Misspecified model: 40/64 branches correct.
-- Therefore, 24/64 near-maximum-support branches were wrong under
+- Correct model: 32/33 branches correct.
+- Misspecified model: 40/61 branches correct.
+- Therefore, 21/61 near-maximum-support branches were wrong under
   misspecification.
 
 This demonstrates that severe model misspecification can produce confidently
@@ -623,25 +624,46 @@ Argument meanings:
 | `--limit` | Analyze only the first N trees |
 | `--label` | Dataset name used in the output filename and CSV rows |
 
-### 9.3 Full-data result reported in the project README
+### 9.3 Completed full-data result
 
-The README records the complete 3,679-tree result:
+The full 3,679-tree survey completed successfully and wrote:
+
+```text
+results/partC_support_avian_uce_trees_3679_full.csv
+```
+
+Its results are:
 
 - 165,555 informative branches (`3,679 × 45`)
-- Median bootstrap support approximately 22
-- Approximately 20% of branches at support 100
-- Approximately 23% at or above support 95
+- 0 branches without numeric support
+- All 3,679 loci contain all 48 taxa
+- Median bootstrap support 22
+- 33,204 branches at support 100 (`20.1%`)
+- 38,447 branches at or above support 95 (`23.2%`)
+
+The support quantiles are:
+
+| Quantile | Support |
+|---:|---:|
+| 1% | 0 |
+| 5% | 0 |
+| 10% | 1 |
+| 25% | 5 |
+| 50% | 22 |
+| 75% | 88 |
+| 90% | 100 |
+| 95% | 100 |
+| 99% | 100 |
 
 This shows substantial support variation, so weighting can materially change
 the contribution of branches.
 
 ### 9.4 Current CSV caveat
 
-The currently checked-in Part C CSV contains only 9,000 branches, exactly
-`200 × 45`, and therefore came from a `--limit 200` run. The script does not
-include the limit in its output filename, so the limited run overwrote the
-full-data CSV. The current CSV must not be presented as the full 3,679-tree
-result. Rerun the full command before final reporting.
+The older `partC_support_avian_uce_trees_3679.csv` contains only 9,000 branches,
+exactly `200 × 45`, and came from a `--limit 200` run. It must not be presented
+as the full result. The authoritative full result is the newer file whose name
+ends in `_full.csv`.
 
 ## 10. Output files and column definitions
 
@@ -788,7 +810,8 @@ The Stage 2 decision should be separated by mechanism:
    misspecification.
 5. Part B substitutes AliSim and IQ-TREE for S100's INDELible and FastTree2
    toolchain.
-6. The current Part C CSV is a limited 200-tree artifact, not the full survey.
+6. The older non-`_full` Part C CSV is a limited 200-tree artifact and should
+   not be confused with the completed `_full.csv` survey.
 7. Fixed output prefixes allow later runs to overwrite earlier results.
 8. The branch CSV does not retain exact split membership.
 9. Numerical calibration and useful reliability ranking are related but
@@ -798,7 +821,7 @@ The Stage 2 decision should be separated by mechanism:
 
 1. Calculate locus-clustered uncertainty for the completed Part A result and
    save a formal replicate-level summary CSV.
-2. Rerun the complete Part C dataset so its CSV matches the README result.
+2. Preserve and checksum the completed Part C `_full.csv` artifact.
 3. Scale Part B to enough independent replicates to support its own Stage 2
    gate.
 4. Preserve the completed Part A artifacts and their run parameters before any

@@ -1,125 +1,144 @@
-# INSTALL — exact steps
+# Installation
 
-Every command below was executed on Ubuntu 24.04 (x86-64) while building this
-project. Where something failed the first time, the fix is included.
+Validated on macOS ARM64 with Python 3, DendroPy 5.0.10, IQ-TREE 2.4.0 and a
+native ARM64 build of SimPhy.
 
----
+## Requirements by experiment
 
-## 0. Python
+| Experiment | Requirements |
+|---|---|
+| Part A — S100 | Python packages and S100 trees |
+| Part B — simulation | Python packages, IQ-TREE and SimPhy |
+| Part C — avian survey | Python packages only; data are bundled |
+
+## 1. Python
 
 ```bash
-cd stage1
-python3 -m pip install -r requirements.txt      # dendropy >= 5.0
-python3 -c "import dendropy; print(dendropy.__version__)"
+conda create -n cse6406 python=3.11
+conda activate cse6406
+python -m pip install -r requirements.txt
 ```
-Verified with dendropy 5.0.10, Python 3.11.
 
----
-
-## 1. IQ-TREE 2 — required for Parts A, B, C
-
-Provides both AliSim (sequence simulation) and ML gene-tree estimation with
-aBayes support. **Verified: 2.4.0.**
+Verify:
 
 ```bash
-cd ..
-curl -L -O https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-Linux-intel.tar.gz
-tar xzf iqtree-2.4.0-Linux-intel.tar.gz
-./iqtree-2.4.0-Linux-intel/bin/iqtree2 --version
+python -c "import dendropy; print(dendropy.__version__)"
+python tests/test_trees.py
 ```
-On Apple Silicon or ARM use the `-Linux-arm` asset, or install via
-`conda install -c bioconda iqtree`.
 
-Then set `IQTREE_BIN` in `src/config.py`.
+## 2. IQ-TREE 2.4.0
 
-> **If you use a version other than 2.4.0, run `tests/test_s100_pipeline.py`
-> before anything else.** The `--abayes` treefile writes the internal label
-> with a leading slash (`(C:0.0,D:0.67)/0.994:0.04`). That format is what the
-> parser handles; if it changes, the parser must change with it.
-
----
-
-## 2. SimPhy — required for Part B only
-
-The simulator used to generate S100 (Mallo, De Oliveira Martins & Posada 2016).
+Install the version used to validate this project:
 
 ```bash
-cd ..
+conda install -c conda-forge -c bioconda iqtree=2.4.0
+which iqtree2
+iqtree2 --version
+```
+
+IQ-TREE supplies both AliSim and maximum-likelihood inference with aBayes
+support.
+
+## 3. SimPhy on macOS ARM64
+
+Install build libraries into the active Conda environment:
+
+```bash
+conda install -c conda-forge gsl mpfr gmp sqlite
+```
+
+From the directory containing this project, clone and build SimPhy:
+
+```bash
 git clone https://github.com/adamallo/SimPhy.git
 cd SimPhy
+mv bin/simphy bin/simphy.prebuilt
+
+make \
+  CFLAGS="-I${CONDA_PREFIX}/include" \
+  LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib"
 ```
 
-The bundled `bin/simphy` is a **macOS Mach-O binary** and will not run on
-Linux (`Exec format error`). Delete it and build from source. The build needs
-three libraries that are not installed by default:
+Verify the native binary and its libraries:
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y libgsl-dev libmpfr-dev libsqlite3-dev
-rm -f bin/simphy
-make
-./bin/simphy | head -3        # should print the SimPhy banner
+file bin/simphy
+otool -L bin/simphy
+./bin/simphy | head -3
 ```
 
-If `apt-get install` returns `404 Not Found`, run `apt-get update` first —
-that was the failure encountered here.
-
-Then set `SIMPHY_BIN` in `src/config.py`.
-
----
-
-## 3. Datasets
-
-### Part C — avian UCE (bundled, nothing to do)
-
-`data/avian/avian_uce_trees_3679.tre` — 3,679 UCE loci, 48 taxa, RAxML rapid
-bootstrap. Avian Phylogenomics Project (Jarvis et al. 2014, *Science*
-346:1320-1331), redistributed in the TREE-QMC tutorial (Han & Molloy 2023,
-*Genome Res* 33:1042-1052):
-<https://github.com/molloy-lab/TREE-QMC/tree/main/tutorial/gene-trees>
-
-### Part A — S100 (you must download it)
-
-The main experiment. Not bundled: it is large and not ours to redistribute.
-Zhang, Rabiee, Sayyari & Mirarab (2018), *BMC Bioinformatics* 19:153; also an
-evaluation set for wASTRAL (Zhang & Mirarab 2022, *MBE* 39:msac215).
-
-Two sources, and **they do not contain the same things** — check both:
-
-| Source | URL |
-|---|---|
-| GitLab tarball `S101.tar.gz` | <https://gitlab.com/esayyari/ASTRALIII> |
-| Dryad, aBayes + bootstrap gene trees | doi:10.6076/D1WK5R |
-| True species trees + published species-tree estimates | <https://github.com/chaoszhang/Weighted-ASTRAL_data> (verified: contains `S100/{01..50}/s_tree.trees`, replicate directories are **zero-padded**) |
-
-Extract so that `data/S100/01/`, `data/S100/02/`, … exist, then:
+`src/config.py` discovers `iqtree2` from `PATH` and uses
+`../SimPhy/bin/simphy` as the default SimPhy location. Either path can be
+overridden:
 
 ```bash
-python3 src/run_s100.py --check --reps 01 --lengths 200
+export IQTREE_BIN=/path/to/iqtree2
+export SIMPHY_BIN=/path/to/simphy
 ```
 
-`--check` prints every file it found and every one it did not. It will not
-guess. In particular it will tell you whether **true gene trees** are present —
-without them the measurement cannot be made at all, because "correct" would be
-undefined and gene-tree discordance caused by incomplete lineage sorting would
-be wrongly scored as estimation error.
-
-**Two things to confirm by eye before trusting any output**, both printed by
-`--check`:
-
-1. **Support scale.** `--check` prints the observed support range and the
-   declared maximum. aBayes should fall in [1/3, 1]; bootstrap in [0, 100]. If
-   they disagree, fix `S100_SUPPORT` in `src/config.py`.
-2. **Label reconciliation.** SimPhy writes gene-tree leaves as
-   `<species>_<locus>_<individual>` (`6_0_0`) and species-tree leaves as bare
-   integers (`6`). `--check` reports which reconciliation it applied.
-
----
-
-## 4. Verify the install
+Return to the project and check the toolchain:
 
 ```bash
-python3 tests/test_trees.py            # no external tools
-python3 tests/test_s100_pipeline.py    # needs IQ-TREE and SimPhy
-python3 src/run_simulated.py --check
+python src/run_simulated.py --check
+```
+
+For Linux or Intel macOS, install the matching IQ-TREE binary and build SimPhy
+with the same required libraries. The environment-variable overrides avoid any
+need to edit `src/config.py`.
+
+## 4. S100 data for Part A
+
+Download and extract the supported estimated trees and species trees:
+
+```bash
+mkdir -p data/downloads
+
+curl -L --fail --retry 3 -C - \
+  -o data/downloads/S100.zip \
+  https://datadryad.org/downloads/file_stream/2374124
+
+unzip -q data/downloads/S100.zip -d data/downloads/S100_dryad
+```
+
+Download the original archive containing the true gene trees:
+
+```bash
+curl -L --fail --retry 3 -C - \
+  -o data/downloads/S101_gitlab.tar.gz \
+  'https://gitlab.com/esayyari/ASTRALIII/-/raw/master/S101.tar.gz?inline=false'
+
+tar -xOzf data/downloads/S101_gitlab.tar.gz genetrees.tar.gz \
+  | tar -xzf - -C data/downloads/S100_dryad {01..50}/truegenetrees
+```
+
+Verify the merged dataset:
+
+```bash
+find data/downloads/S100_dryad -type f -name truegenetrees | wc -l
+wc -l data/downloads/S100_dryad/01/truegenetrees
+
+python src/run_s100.py \
+  --check \
+  --s100-dir data/downloads/S100_dryad \
+  --reps 01 \
+  --lengths 200 \
+  --support .abayes
+```
+
+Expected: 50 `truegenetrees` files, 1,000 trees per replicate, 101 taxa and
+aBayes support in `[0.333, 1.0]`.
+
+The nested `alignments.tar.gz` archive is not required for the current Stage 1
+or Stage 2 experiments.
+
+## 5. Final checks
+
+```bash
+python tests/test_trees.py
+python src/run_simulated.py --check
+python src/run_s100.py \
+  --check \
+  --s100-dir data/downloads/S100_dryad \
+  --reps 01 \
+  --lengths 200
 ```
