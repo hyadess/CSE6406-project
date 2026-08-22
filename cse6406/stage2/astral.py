@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from cse6406.core.command_runner import CommandRunner
+from cse6406.stage2.threads import aster_threads
 
 
 class AstralRunner:
@@ -13,7 +14,7 @@ class AstralRunner:
         if not output_tree.is_file():
             self.runner.run(
                 [self.binary, "-i", input_trees.resolve(), "-o", output_tree.resolve(),
-                 "-t", threads, "-u", 0],
+                 "-t", aster_threads(threads), "-u", 0],
                 log=output_tree.with_suffix(".log"),
             )
         return output_tree

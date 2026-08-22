@@ -5,6 +5,7 @@ from pathlib import Path
 from cse6406.core.errors import PipelineError
 from cse6406.domain.condition import ExperimentCondition
 from cse6406.inference_models.base import AnalysisModel
+from cse6406.stage2.astral import AstralRunner
 from cse6406.stage2.species_tree import SpeciesTreeEvaluator
 from cse6406.stage2.support_preparer import SupportTreePreparer
 from cse6406.stage2.wastral import WeightedAstralRunner
@@ -22,6 +23,18 @@ class RecordingRunner:
 
 
 class Stage2Tests(unittest.TestCase):
+    def test_astral_converts_auto_threads_to_an_integer(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            inputs, output = root / "genes.tre", root / "species.tre"
+            inputs.write_text("((A,B),(C,D));\n")
+            recorder = RecordingRunner()
+            AstralRunner(Path("/bin/astral4"), recorder).run(
+                inputs, output, threads="AUTO"
+            )
+            value = recorder.command[recorder.command.index("-t") + 1]
+            self.assertGreater(int(value), 0)
+
     def test_wastral_uses_support_mode_and_bayesian_scale(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -32,6 +45,18 @@ class Stage2Tests(unittest.TestCase):
             self.assertIn("--mode", recorder.command)
             self.assertIn("2", recorder.command)
             self.assertIn("-B", recorder.command)
+
+    def test_wastral_converts_auto_threads_to_an_integer(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            inputs, output = root / "genes.tre", root / "species.tre"
+            inputs.write_text("((A,B)/0.99,(C,D)/0.80);\n")
+            recorder = RecordingRunner()
+            WeightedAstralRunner(Path("/bin/wastral"), recorder).run(
+                inputs, output, threads="AUTO"
+            )
+            value = recorder.command[recorder.command.index("-t") + 1]
+            self.assertGreater(int(value), 0)
 
     def test_wastral_rejects_missing_support(self):
         with tempfile.TemporaryDirectory() as temporary:

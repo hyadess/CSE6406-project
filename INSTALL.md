@@ -109,10 +109,10 @@ Executables on `PATH` are discovered automatically. Otherwise set absolute
 paths:
 
 ```bash
-export SIMPHY_BIN=/absolute/path/to/SimPhy/bin/simphy
-export IQTREE_BIN=/absolute/path/to/iqtree2
-export ASTRAL_BIN=/absolute/path/to/ASTER/bin/astral4
-export WASTRAL_BIN=/absolute/path/to/ASTER/bin/wastral
+export SIMPHY_BIN=/Users/sayemshahad/Downloads/SimPhy/bin/simphy
+export IQTREE_BIN=/Users/sayemshahad/anaconda3/envs/cse6406/bin/iqtree2
+export ASTRAL_BIN=/Users/sayemshahad/Downloads/ASTER/bin/astral4
+export WASTRAL_BIN=/Users/sayemshahad/Downloads/ASTER/bin/wastral
 ```
 
 Do not edit source files to configure machine-specific paths.
