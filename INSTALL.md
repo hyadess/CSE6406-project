@@ -1,144 +1,225 @@
-# Installation
+# Installation and reproducible setup
 
-Validated on macOS ARM64 with Python 3, DendroPy 5.0.10, IQ-TREE 2.4.0 and a
-native ARM64 build of SimPhy.
+This file contains the complete setup for the full experiment in
+`overall_plan.md`. The production workflow requires Python, SimPhy, IQ-TREE,
+ASTRAL-IV, and wASTRAL. Stage 1 can run without the two ASTER executables.
 
-## Requirements by experiment
+The implementation was smoke-tested on macOS ARM64 with Python 3.13.15,
+DendroPy 5.0.10, IQ-TREE 2.4.0, and SimPhy 1.0.2.
 
-| Experiment | Requirements |
-|---|---|
-| Part A — S100 | Python packages and S100 trees |
-| Part B — simulation | Python packages, IQ-TREE and SimPhy |
-| Part C — avian survey | Python packages only; data are bundled |
+## 1. Create the Python environment
 
-## 1. Python
+From the repository root:
 
 ```bash
-conda create -n cse6406 python=3.11
+conda create -n cse6406 -c conda-forge python=3.13 pip
 conda activate cse6406
 python -m pip install -r requirements.txt
 ```
 
-Verify:
+Verify Python and DendroPy:
 
 ```bash
+python --version
 python -c "import dendropy; print(dendropy.__version__)"
-python tests/test_trees.py
 ```
 
-## 2. IQ-TREE 2.4.0
+## 2. Install IQ-TREE with AliSim
 
-Install the version used to validate this project:
+The validated version is IQ-TREE 2.4.0:
 
 ```bash
 conda install -c conda-forge -c bioconda iqtree=2.4.0
-which iqtree2
 iqtree2 --version
 ```
 
-IQ-TREE supplies both AliSim and maximum-likelihood inference with aBayes
-support.
+IQ-TREE performs both AliSim sequence generation and ML gene-tree inference
+with aBayes support. The fixed analysis grid is `GTR+G4`, `GTR`, `HKY+G4`,
+`HKY`, and `JC`.
 
-## 3. SimPhy on macOS ARM64
+## 3. Build SimPhy
 
-Install build libraries into the active Conda environment:
+Install native libraries in the same Conda environment:
 
 ```bash
 conda install -c conda-forge gsl mpfr gmp sqlite
 ```
 
-From the directory containing this project, clone and build SimPhy:
+Clone SimPhy beside this repository and compile it:
 
 ```bash
+cd ..
 git clone https://github.com/adamallo/SimPhy.git
 cd SimPhy
 mv bin/simphy bin/simphy.prebuilt
-
 make \
   CFLAGS="-I${CONDA_PREFIX}/include" \
   LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib"
+cd ../CSE6406-project
 ```
 
-Verify the native binary and its libraries:
+On macOS, confirm that the result matches the machine architecture:
 
 ```bash
-file bin/simphy
-otool -L bin/simphy
-./bin/simphy | head -3
+file ../SimPhy/bin/simphy
+otool -L ../SimPhy/bin/simphy
+../SimPhy/bin/simphy | head -3
 ```
 
-`src/config.py` discovers `iqtree2` from `PATH` and uses
-`../SimPhy/bin/simphy` as the default SimPhy location. Either path can be
-overridden:
+The prebuilt file in the upstream repository may target a different platform;
+the native rebuild is therefore intentional.
+
+## 4. Install ASTER (ASTRAL-IV and wASTRAL)
+
+The current ASTER documentation offers Conda installation:
 
 ```bash
-export IQTREE_BIN=/path/to/iqtree2
-export SIMPHY_BIN=/path/to/simphy
+conda install -c conda-forge -c bioconda aster
+astral4 -h
+wastral -h
 ```
 
-Return to the project and check the toolchain:
+If the package does not provide binaries for the platform, build from source:
 
 ```bash
-python src/run_simulated.py --check
+cd ..
+git clone https://github.com/chaoszhang/ASTER.git
+cd ASTER
+make
+bin/astral4 -h
+bin/wastral -h
+cd ../CSE6406-project
 ```
 
-For Linux or Intel macOS, install the matching IQ-TREE binary and build SimPhy
-with the same required libraries. The environment-variable overrides avoid any
-need to edit `src/config.py`.
+The project uses:
 
-## 4. S100 data for Part A
+- `astral4 -u 0` for the unweighted topology analysis;
+- `wastral --mode 2 -B -u 0` for support-only weighting with local Bayesian
+  support scaled from 0.333 to 1.
 
-Download and extract the supported estimated trees and species trees:
+These choices follow the current official ASTER tutorials. The weighted input
+preparer converts IQ-TREE labels such as `/0.994` to numeric values. If
+IQ-TREE leaves a zero-length internal branch unlabeled, the preparer records
+the event and assigns 1/3, the documented local-Bayesian lower bound and thus
+the minimum support weight.
+
+## 5. Configure executable locations
+
+Executables on `PATH` are discovered automatically. Otherwise set absolute
+paths:
 
 ```bash
-mkdir -p data/downloads
-
-curl -L --fail --retry 3 -C - \
-  -o data/downloads/S100.zip \
-  https://datadryad.org/downloads/file_stream/2374124
-
-unzip -q data/downloads/S100.zip -d data/downloads/S100_dryad
+export SIMPHY_BIN=/absolute/path/to/SimPhy/bin/simphy
+export IQTREE_BIN=/absolute/path/to/iqtree2
+export ASTRAL_BIN=/absolute/path/to/ASTER/bin/astral4
+export WASTRAL_BIN=/absolute/path/to/ASTER/bin/wastral
 ```
 
-Download the original archive containing the true gene trees:
+Do not edit source files to configure machine-specific paths.
+
+## 6. Verify the installation
+
+Run all Python tests:
 
 ```bash
-curl -L --fail --retry 3 -C - \
-  -o data/downloads/S101_gitlab.tar.gz \
-  'https://gitlab.com/esayyari/ASTRALIII/-/raw/master/S101.tar.gz?inline=false'
-
-tar -xOzf data/downloads/S101_gitlab.tar.gz genetrees.tar.gz \
-  | tar -xzf - -C data/downloads/S100_dryad {01..50}/truegenetrees
-```
-
-Verify the merged dataset:
-
-```bash
-find data/downloads/S100_dryad -type f -name truegenetrees | wc -l
-wc -l data/downloads/S100_dryad/01/truegenetrees
-
-python src/run_s100.py \
-  --check \
-  --s100-dir data/downloads/S100_dryad \
-  --reps 01 \
-  --lengths 200 \
-  --support .abayes
-```
-
-Expected: 50 `truegenetrees` files, 1,000 trees per replicate, 101 taxa and
-aBayes support in `[0.333, 1.0]`.
-
-The nested `alignments.tar.gz` archive is not required for the current Stage 1
-or Stage 2 experiments.
-
-## 5. Final checks
-
-```bash
+python -m unittest discover -s tests -v
 python tests/test_trees.py
-python src/run_simulated.py --check
-python src/run_s100.py \
-  --check \
-  --s100-dir data/downloads/S100_dryad \
-  --reps 01 \
-  --lengths 200
 ```
+
+Preflight the full toolchain:
+
+```bash
+python run_project.py --check
+```
+
+If ASTER is not installed yet, verify the Stage 1 toolchain only:
+
+```bash
+python run_project.py --check --stage1-only
+```
+
+Run a small real-tool smoke test. This is for integration verification, not a
+scientific result:
+
+```bash
+python run_project.py \
+  --stage1-only \
+  --output work/smoke \
+  --taxa 6 \
+  --loci 2 \
+  --replicates 1 \
+  --lengths 60 \
+  --threads 1
+```
+
+## 7. Run the experiment
+
+The preregistered default grid is 51 taxa, 200 loci, 10 replicates, two ILS
+levels, three sequence lengths, and five IQ-TREE models:
+
+```bash
+python run_project.py --check
+python run_project.py --threads AUTO
+```
+
+This implies 60,000 IQ-TREE locus analyses
+(`2 × 10 × 3 × 5 × 200`) and 300 paired species-tree conditions. Run it on an
+appropriate workstation or scheduler. The workflow is resumable: validated
+trees and alignments are reused on restart.
+
+For a smaller production pilot:
+
+```bash
+python run_project.py \
+  --output work/pilot \
+  --taxa 21 \
+  --loci 50 \
+  --replicates 3 \
+  --lengths 200 800 \
+  --threads AUTO
+```
+
+For Stage 1 alone:
+
+```bash
+python run_project.py --stage1-only --threads AUTO
+```
+
+To run only selected inference setups, use the names of their files under
+`cse6406/inference_models/`:
+
+```bash
+python run_project.py --models gtr_g4 jc --threads AUTO
+```
+
+## 8. Output layout
+
+Each ILS/replicate directory contains:
+
+```text
+simphy/1/                         true species and per-locus gene trees
+alignments/L<length>/             shared AliSim alignments
+estimated_gene_trees/L*/<model>/  IQ-TREE outputs for one model
+logs/                             exact commands and captured program output
+```
+
+`<output>/results/` contains:
+
+```text
+ils_verification.csv              per-replicate true-gene/species discordance
+ils_summary.csv                   pooled check that high ILS exceeds low ILS
+stage1_branches.csv               one row per estimated internal branch
+stage1_calibration.csv            pooled P(correct | support bin)
+stage1_summary.csv                pooled branch/high-support error summaries
+stage1_replicate_summary.csv      replicate-level Stage 1 summaries
+stage2_species_tree_error.csv     ASTRAL, wASTRAL, and paired delta errors
+```
+
+`design.json`, `preflight.json`, per-command logs, and support-imputation logs
+make every run auditable.
+
+## 9. Clean-project boundary
+
+Only `run_project.py` and `cse6406/` form the active pipeline. Superseded code,
+old generated outputs, and historical tests are isolated in
+`archive/previous_pipeline/` and are not part of installation or validation.

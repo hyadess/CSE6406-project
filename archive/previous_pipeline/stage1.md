@@ -1,3 +1,9 @@
+# Archived detailed Stage 1 record
+
+The concise, current results summary is [`result.md`](result.md). This file is
+retained as the detailed execution record for the completed S100 benchmark,
+the earlier two-model simulation, and the avian support survey.
+
 # Stage 1 — Gene-tree branch-support calibration
 
 ## 1. Purpose
