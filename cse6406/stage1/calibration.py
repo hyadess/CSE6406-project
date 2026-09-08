@@ -47,6 +47,7 @@ class CalibrationAnalyzer:
             calibration.append({
                 "condition": condition, "support_bin": support_bin,
                 "n_branches": len(rows), "n_correct": correct,
+                "mean_support": sum(float(row.support) for row in rows) / len(rows),
                 "p_correct": correct / len(rows), "ci_low": low, "ci_high": high,
             })
 
@@ -68,6 +69,22 @@ class CalibrationAnalyzer:
             wrong = [row for row in rows if not row.correct]
             high95 = [row for row in rows if row.support is not None and row.support >= .95]
             high99 = [row for row in rows if row.support is not None and row.support >= .99]
+            supported = [row for row in rows if row.support is not None]
+            brier = (
+                sum((float(row.support) - float(row.correct)) ** 2 for row in supported)
+                / len(supported) if supported else None
+            )
+            ece_parts = []
+            for low, high in BINS:
+                in_bin = [
+                    row for row in supported
+                    if low <= float(row.support) < high
+                ]
+                if in_bin:
+                    mean_support = sum(float(row.support) for row in in_bin) / len(in_bin)
+                    accuracy = sum(row.correct for row in in_bin) / len(in_bin)
+                    ece_parts.append(len(in_bin) * abs(mean_support - accuracy))
+            ece = sum(ece_parts) / len(supported) if supported else None
             exemplar = rows[0]
             summary.append({
                 "condition": condition, "ils": exemplar.ils,
@@ -78,6 +95,8 @@ class CalibrationAnalyzer:
                 "n_supported_branches": sum(row.support is not None for row in rows),
                 "n_missing_support": sum(row.support is None for row in rows),
                 "branch_error_rate": len(wrong) / len(rows),
+                "brier_score": brier,
+                "expected_calibration_error": ece,
                 "p_wrong_given_support_ge_0.95": (
                     sum(not row.correct for row in high95) / len(high95) if high95 else None
                 ),

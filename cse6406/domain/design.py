@@ -19,10 +19,10 @@ class ILSLevel:
 class ExperimentalDesign:
     """The complete factorial design and reproducibility parameters."""
 
-    output: Path = Path("work/full_experiment")
+    output: Path = Path("work/full_experiment_r50")
     taxa: int = 51
     loci: int = 200
-    replicates: int = 10
+    replicates: int = 50
     sequence_lengths: tuple[int, ...] = (200, 800, 1600)
     ils_levels: tuple[ILSLevel, ...] = (
         ILSLevel("low", 100_000),
@@ -33,8 +33,13 @@ class ExperimentalDesign:
     threads: str = "1"
     birth_rate: float = 1e-7
     tree_height: int = 2_500_000
-    substitution_rate: float = 10_000_000
+    substitution_rate_mean: float = 1e-7
     generating_model: str = "GTR{1,2,1,1,2}+F{0.30,0.20,0.20,0.30}+G4{0.20}"
+    contracted_abayes_threshold: float = 0.90
+    low_ils_max_nrf: float = 0.25
+    high_ils_min_nrf: float = 0.55
+    minimum_ils_nrf_gap: float = 0.30
+    enforce_ils_gate: bool = True
 
     def validate(self) -> None:
         if self.taxa < 4 or self.loci < 1 or self.replicates < 1:
@@ -45,6 +50,14 @@ class ExperimentalDesign:
             raise ValueError("ILS level names must be unique")
         if len({x.name for x in self.models}) != len(self.models):
             raise ValueError("analysis-model names must be unique")
+        if self.substitution_rate_mean <= 0:
+            raise ValueError("substitution_rate_mean must be positive")
+        if not 1 / 3 <= self.contracted_abayes_threshold <= 1:
+            raise ValueError("contracted_abayes_threshold must be between 1/3 and 1")
+        if not 0 <= self.low_ils_max_nrf < self.high_ils_min_nrf <= 1:
+            raise ValueError("ILS nRF thresholds must satisfy 0 <= low < high <= 1")
+        if not 0 < self.minimum_ils_nrf_gap <= 1:
+            raise ValueError("minimum_ils_nrf_gap must be in (0,1]")
 
     def conditions(self) -> list[ExperimentCondition]:
         return [

@@ -15,10 +15,10 @@ from cse6406.pipeline import ExperimentPipeline
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("work/full_experiment"))
+    parser.add_argument("--output", type=Path, default=Path("work/full_experiment_r50"))
     parser.add_argument("--taxa", type=int, default=51)
     parser.add_argument("--loci", type=int, default=200)
-    parser.add_argument("--replicates", type=int, default=10)
+    parser.add_argument("--replicates", type=int, default=50)
     parser.add_argument("--lengths", type=int, nargs="+", default=[200, 800, 1600])
     parser.add_argument(
         "--models", nargs="+", choices=tuple(MODEL_BY_NAME),
@@ -29,6 +29,10 @@ def parse_args():
     parser.add_argument("--threads", default="1")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--stage1-only", action="store_true")
+    parser.add_argument(
+        "--skip-ils-gate", action="store_true",
+        help="allow diagnostic smoke/pilot runs outside the preregistered ILS ranges",
+    )
     return parser.parse_args()
 
 
@@ -38,12 +42,12 @@ def main() -> int:
         output=args.output.resolve(), taxa=args.taxa, loci=args.loci,
         replicates=args.replicates, sequence_lengths=tuple(args.lengths),
         models=tuple(MODEL_BY_NAME[name] for name in args.models),
-        seed=args.seed, threads=args.threads,
+        seed=args.seed, threads=args.threads, enforce_ils_gate=not args.skip_ils_gate,
     )
     pipeline = ExperimentPipeline(design, Toolchain.discover())
     if args.check:
-        for name, version in pipeline.preflight(stage2=not args.stage1_only).items():
-            print(f"[ok] {name}: {version}")
+        for name, metadata in pipeline.preflight(stage2=not args.stage1_only).items():
+            print(f"[ok] {name}: {metadata['version']} ({metadata['path']})")
         return 0
     pipeline.run(stage2=not args.stage1_only)
     print(f"Completed results: {design.output / 'results'}")

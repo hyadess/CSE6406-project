@@ -5,6 +5,11 @@ from cse6406.domain.design import ExperimentalDesign
 
 
 class ExperimentalDesignTests(unittest.TestCase):
+    def test_publication_defaults_use_fifty_replicates(self):
+        design = ExperimentalDesign()
+        self.assertEqual(design.replicates, 50)
+        self.assertEqual(design.substitution_rate_mean, 1e-7)
+
     def test_full_grid_contains_every_factor(self):
         design = ExperimentalDesign(
             output=Path("unused"), replicates=2, sequence_lengths=(200, 800)

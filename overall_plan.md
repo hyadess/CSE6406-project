@@ -136,7 +136,18 @@ P(\text{correct}\mid\text{support}).
 
 This determines whether higher support still corresponds to higher reliability.
 
-### 3. High-support incorrect branches
+Each support bin reports its mean support as well as observed correctness, so a
+calibration plot compares like with like rather than using only bin endpoints.
+
+### 3. Proper-score calibration summaries
+
+The Brier score is the mean squared difference between branch support and the
+0/1 correctness outcome. Lower is better. Expected calibration error (ECE) is
+the branch-count-weighted average absolute gap between mean support and
+observed correctness within the fixed bins. These give operational numerical
+definitions of support reliability in addition to the calibration plot.
+
+### 4. High-support incorrect branches
 
 Important summaries include
 
@@ -152,7 +163,7 @@ P(\text{wrong}\mid\text{support}\ge0.99).
 
 These quantities are particularly important for Stage 2 because wASTRAL gives greater influence to relationships associated with stronger support.
 
-### 4. Effect of ILS
+### 5. Effect of ILS
 
 Stage 1 then compares these quantities between low- and high-ILS conditions.
 
@@ -218,29 +229,19 @@ ASTRAL combines many gene trees into one estimated species tree.
 
 ASTRAL evaluates quartet relationships induced by the input gene trees and searches for a species tree with high agreement with those gene-tree quartets.
 
-In the unweighted analysis, support values on gene-tree branches are not used to reduce the contribution of uncertain relationships in the same way as support-weighted ASTRAL.
+The resolved unweighted analysis ignores support values. A second reference-
+aligned baseline contracts branches with aBayes support below 0.90 before
+running ASTRAL, representing the uncertainty as polytomies.
 
 For each condition:
 
 ```text
 estimated gene trees
-        ↓
-ASTRAL
-        ↓
-unweighted species tree
+        ├── resolved ASTRAL
+        └── contract aBayes < 0.90 → ASTRAL
 ```
 
-Thus:
-
-```text
-GTR+G4 estimated gene trees → ASTRAL
-GTR estimated gene trees    → ASTRAL
-HKY+G4 estimated gene trees → ASTRAL
-HKY estimated gene trees    → ASTRAL
-JC estimated gene trees     → ASTRAL
-```
-
-and the same set is repeated for each ILS condition.
+Both baselines are run for every analysis model and ILS condition.
 
 ---
 
@@ -263,40 +264,44 @@ For each model and ILS condition:
 
 ```text
 estimated gene trees
-        ↓
-support-weighted wASTRAL
-        ↓
-weighted species tree
+        ├── support-only wASTRAL mode 2
+        └── default hybrid wASTRAL
 ```
 
-The primary weighted analysis should use the **support-weighted mode** of wASTRAL because the project specifically asks whether branch support remains trustworthy under gene-tree model misspecification.
+Support-only mode is the primary mechanistic analysis because the project asks
+whether branch support remains trustworthy under misspecification. Default
+hybrid weighting is included for alignment with how wASTRAL is normally run
+and with the headline method in Zhang and Mirarab (2022). Both use `-B` so
+aBayes support is explicitly scaled from 1/3 to 1.
 
 ---
 
 # Stage 2: weighted versus unweighted comparison
 
-Every gene-tree inference condition therefore produces two species trees:
+Every gene-tree inference condition therefore produces four species trees:
 
 ```text
 GTR+G4 gene trees
-├── ASTRAL
-└── wASTRAL
+├── resolved ASTRAL
+├── 0.90-contracted ASTRAL
+├── support-only wASTRAL
+└── hybrid wASTRAL
 
 GTR gene trees
-├── ASTRAL
-└── wASTRAL
+├── resolved/contracted ASTRAL
+└── support-only/hybrid wASTRAL
 
 HKY+G4 gene trees
-├── ASTRAL
-└── wASTRAL
+├── resolved/contracted ASTRAL
+└── support-only/hybrid wASTRAL
 
 HKY gene trees
-├── ASTRAL
-└── wASTRAL
+├── resolved/contracted ASTRAL
+└── support-only/hybrid wASTRAL
 
 JC gene trees
-├── ASTRAL
-└── wASTRAL
+├── resolved/contracted ASTRAL
+└── support-only/hybrid wASTRAL
 ```
 
 This entire comparison is performed separately under low and high ILS.
@@ -398,20 +403,23 @@ The same simulated DNA is used within every corresponding gene-tree model condit
 
 | DNA generated with | ILS | IQ-TREE model | Species-tree method | Purpose |
 |---|---|---|---|---|
-| GTR+G4 | Low / High | GTR+G4 | ASTRAL | Correct-model unweighted baseline |
-| GTR+G4 | Low / High | GTR+G4 | wASTRAL | Weighting with correctly specified inference |
-| GTR+G4 | Low / High | GTR | ASTRAL | Misspecification from removing rate heterogeneity |
-| GTR+G4 | Low / High | GTR | wASTRAL | Test whether support weighting remains useful |
-| GTR+G4 | Low / High | HKY+G4 | ASTRAL | Simpler substitution-model baseline |
-| GTR+G4 | Low / High | HKY+G4 | wASTRAL | Test weighting under substitution-model simplification |
-| GTR+G4 | Low / High | HKY | ASTRAL | Stronger combined simplification |
-| GTR+G4 | Low / High | HKY | wASTRAL | Test weighting under stronger misspecification |
-| GTR+G4 | Low / High | JC | ASTRAL | Severe misspecified baseline |
-| GTR+G4 | Low / High | JC | wASTRAL | Stress test when support may be misleading |
+| GTR+G4 | Low / High | GTR+G4 | resolved/contracted ASTRAL | Correct-model unweighted baselines |
+| GTR+G4 | Low / High | GTR+G4 | support-only/hybrid wASTRAL | Weighting with correctly specified inference |
+| GTR+G4 | Low / High | GTR | resolved/contracted ASTRAL | Misspecification from removing rate heterogeneity |
+| GTR+G4 | Low / High | GTR | support-only/hybrid wASTRAL | Test whether weighting remains useful |
+| GTR+G4 | Low / High | HKY+G4 | resolved/contracted ASTRAL | Simpler substitution-model baselines |
+| GTR+G4 | Low / High | HKY+G4 | support-only/hybrid wASTRAL | Test weighting under substitution-model simplification |
+| GTR+G4 | Low / High | HKY | resolved/contracted ASTRAL | Stronger combined simplification |
+| GTR+G4 | Low / High | HKY | support-only/hybrid wASTRAL | Test weighting under stronger misspecification |
+| GTR+G4 | Low / High | JC | resolved/contracted ASTRAL | Severe misspecified baselines |
+| GTR+G4 | Low / High | JC | support-only/hybrid wASTRAL | Stress test when support may be misleading |
 
 Because the same alignments are analyzed under each IQ-TREE model, differences among GTR+G4, GTR, HKY+G4, HKY, and JC are associated with the gene-tree analysis model.
 
-Within each model condition, ASTRAL and wASTRAL receive the same estimated gene-tree topologies. Their comparison therefore measures the effect of incorporating branch-support weights.
+Within each model condition, resolved ASTRAL and both wASTRAL arms start from
+the same estimated gene-tree topologies. The contracted baseline deliberately
+replaces weak relationships with polytomies. Reporting both baselines separates
+the effect of weighting support from the established practice of contraction.
 
 ---
 
@@ -483,38 +491,6 @@ All of these are scientifically interpretable outcomes.
 
 ---
 
-# References supporting the design
-
-1. **Mirarab et al. (2014), ASTRAL: genome-scale coalescent-based species tree estimation. Bioinformatics.**  
-   Establishes ASTRAL as a quartet-based species-tree method under the multispecies coalescent.  
-   https://doi.org/10.1093/bioinformatics/btu462
-
-2. **Zhang and Mirarab (2022), Weighting by Gene Tree Uncertainty Improves Accuracy of Quartet-based Species Trees. Molecular Biology and Evolution.**  
-   Introduces weighted ASTRAL formulations and motivates weighting quartet evidence using gene-tree uncertainty/support.  
-   https://doi.org/10.1093/molbev/msac215
-
-3. **ASTER / wASTRAL documentation.**  
-   Documents practical wASTRAL implementations, including support-based weighting modes.  
-   https://github.com/chaoszhang/ASTER
-
-4. **Nguyen et al. (2015), IQ-TREE: A Fast and Effective Stochastic Algorithm for Estimating Maximum-Likelihood Phylogenies. Molecular Biology and Evolution.**  
-   Establishes IQ-TREE for maximum-likelihood gene-tree inference.  
-   https://doi.org/10.1093/molbev/msu300
-
-5. **IQ-TREE substitution-model documentation.**  
-   Documents JC, HKY, GTR, and gamma-distributed rate heterogeneity used in this experiment.  
-   https://iqtree.github.io/doc/Substitution-Models
-
-6. **Mallo, Martins, and Posada (2016), SimPhy: Phylogenomic Simulation of Gene, Locus, and Species Trees. Systematic Biology.**  
-   Supports simulation of species trees and gene trees under processes including the multispecies coalescent and ILS.  
-   https://doi.org/10.1093/sysbio/syv082
-
-7. **Mirarab and Warnow / ASTRAL-II simulation work.**  
-   Uses SimPhy-based phylogenomic simulations and examines ASTRAL across different levels of ILS, providing precedent for varying ILS in the current experiment.  
-   https://pmc.ncbi.nlm.nih.gov/articles/PMC4765870/
-
----
-
 # Final project focus
 
 The project should remain focused on one question:
@@ -536,7 +512,7 @@ Everything in Stage 2 tests its consequence:
 ```text
 same estimated gene trees
     ↓
-ASTRAL vs wASTRAL
+resolved/contracted ASTRAL vs support-only/hybrid wASTRAL
     ↓
 species-tree error
 ```
@@ -554,18 +530,47 @@ The plan is implemented by `run_project.py` and the class-based modules under
 |---|---|
 | Taxa | 51 |
 | Loci per replicate | 200 |
-| Replicates | 10 |
+| Replicates | 50 independent species-tree replicates |
 | Sequence lengths | 200, 800, 1,600 bp |
 | ILS treatment | low (`Ne=100,000`), high (`Ne=1,000,000`) |
-| Generating model | fixed-parameter GTR+F+G4 |
-| Analysis models | GTR+G4, GTR, HKY+G4, HKY, JC |
-| Unweighted method | ASTRAL-IV topology mode |
-| Weighted method | wASTRAL support mode 2 with `-B` aBayes scaling |
+| Taxon sampling | 50 ingroup + 1 outgroup; one individual per species |
+| Species-tree process | birth-only, conditioned on 50 ingroup leaves and height 2,500,000 generations; birth rate `1e-7` |
+| Substitution-rate process | exponential with mean `1e-7` substitutions/site/generation (`-su e:10000000`) |
+| Generating model | `GTR{1,2,1,1,2}+F{0.30,0.20,0.20,0.30}+G4{0.20}` |
+| Analysis models | GTR+G4 correct-model reference; GTR, HKY+G4, HKY, and JC misspecified conditions |
+| Unweighted methods | ASTRAL-IV on resolved trees; ASTRAL-IV after contracting aBayes `<0.90` |
+| Weighted methods | support-only wASTRAL mode 2 with `-B`; default hybrid wASTRAL with `-B` |
+| ILS acceptance | low pooled nRF `<=0.25`; high pooled nRF `>=0.55`; gap `>=0.30` |
+
+### Generating-model parameters in plain language
+
+The generating model is written compactly for AliSim, but each part has a
+different biological job:
+
+- `GTR{1,2,1,1,2}` lets different nucleotide changes have different relative
+  rates. G-T is the reference rate of 1, so five additional numbers are enough
+  to define all six exchangeabilities.
+- `+F{0.30,0.20,0.20,0.30}` fixes the expected base composition at 30% A,
+  20% C, 20% G, and 30% T. The usefulness of `+F` is that it represents
+  unequal nucleotide abundance. A model without this component can be forced
+  toward an unrealistic 25%-per-base assumption. In ordinary IQ-TREE
+  inference, plain `+F` means frequencies counted from the alignment; in
+  AliSim, the values inside braces are the actual frequencies used to generate
+  the sequences.
+- `+G4{0.20}` divides sites among four gamma-rate categories. Alpha 0.20 gives
+  strong among-site rate heterogeneity: many sites change slowly while a
+  smaller fraction changes rapidly.
+
+The same exchangeabilities, base frequencies, and gamma shape are used for all
+loci. This deliberately removes across-locus substitution-parameter variation
+so that analysis-model misspecification is isolated; generalization to
+heterogeneous real genomes is a stated limitation.
 
 Population size is the manipulated ILS parameter; the realized treatment is
 not assumed. `ils_verification.csv` records true-gene-tree versus true-species-
-tree normalized RF for every replicate, and `ils_summary.csv` reports whether
-the pooled high-ILS discordance exceeds the pooled low-ILS discordance.
+tree normalized RF for every replicate. Tree histories are generated first,
+and the pipeline stops before sequence simulation unless `ils_summary.csv`
+meets all three preregistered ILS thresholds in the table above.
 
 Stage 1 missing aBayes labels remain missing in calibration and are counted.
 For Stage 2 only, wASTRAL's numeric-label requirement is met by assigning the
@@ -574,5 +579,48 @@ Every imputation is counted in a sidecar audit file. ASTRAL receives the
 original topology, so weighted and unweighted analyses still use identical
 estimated gene-tree relationships.
 
+The 0.90-aBayes contracted ASTRAL arm follows the comparison used for the S200
+dataset by Zhang and Mirarab (2022). Support-only mode remains the mechanistic
+test of interest, while default hybrid wASTRAL is included so conclusions can
+also address the tool's usual support-plus-branch-length configuration.
+
+Replicate is the independent biological unit. The 50 replicates are treated as
+paired blocks across ILS, sequence length, analysis model, and species-tree
+method. Branches, loci, and the full grid of condition rows are not independent
+replicates. Confirmatory contrasts and multiplicity handling are specified in
+`ANALYSIS_PLAN.md`.
+
 The full production grid is intentionally not described as completed. Current
 completed results and verification status are recorded in `result.md`.
+
+---
+
+# References supporting the design
+
+1. **Mirarab et al. (2014), ASTRAL: genome-scale coalescent-based species tree estimation. Bioinformatics.**
+   Establishes ASTRAL as a quartet-based species-tree method under the multispecies coalescent.
+   https://doi.org/10.1093/bioinformatics/btu462
+
+2. **Zhang and Mirarab (2022), Weighting by Gene Tree Uncertainty Improves Accuracy of Quartet-based Species Trees. Molecular Biology and Evolution.**
+   Introduces support, branch-length, and hybrid weighting; uses 50 simulation replicates and a 0.90-aBayes contracted ASTRAL comparison for S200.
+   https://doi.org/10.1093/molbev/msac215
+
+3. **ASTER / wASTRAL documentation.**
+   Documents support-only mode 2, default hybrid weighting, and `-B` scaling for local Bayesian support.
+   https://github.com/chaoszhang/ASTER
+
+4. **Nguyen et al. (2015), IQ-TREE: A Fast and Effective Stochastic Algorithm for Estimating Maximum-Likelihood Phylogenies. Molecular Biology and Evolution.**
+   Establishes IQ-TREE for maximum-likelihood gene-tree inference.
+   https://doi.org/10.1093/molbev/msu300
+
+5. **IQ-TREE substitution-model documentation.**
+   Documents fixed GTR exchangeabilities, fixed `+F{...}` frequencies, and fixed `+G{alpha}` rate heterogeneity used here.
+   https://iqtree.github.io/doc/Substitution-Models
+
+6. **Mallo, Martins, and Posada (2016), SimPhy: Phylogenomic Simulation of Gene, Locus, and Species Trees. Systematic Biology.**
+   Supports conditioned species-tree and multispecies-coalescent gene-tree simulation.
+   https://doi.org/10.1093/sysbio/syv082
+
+7. **Mirarab and Warnow / ASTRAL-II simulation work.**
+   Uses SimPhy-based phylogenomic simulations and examines ASTRAL across different levels of ILS, providing precedent for varying ILS in the current experiment.
+   https://pmc.ncbi.nlm.nih.gov/articles/PMC4765870/

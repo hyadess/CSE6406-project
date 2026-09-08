@@ -33,10 +33,10 @@ class WeightedAstralRunner:
             for _split, support in informative_splits(read_tree_text(text), with_support=True):
                 if support is None:
                     missing += 1
-                elif not 0.0 <= support <= 1.0:
+                elif not 1 / 3 <= support <= 1.0:
                     outside.append(support)
         if missing or outside:
             raise PipelineError(
                 f"wASTRAL input failed support validation: {missing} missing labels, "
-                f"{len(outside)} outside [0,1]"
+                f"{len(outside)} outside the local-Bayesian range [1/3,1]"
             )

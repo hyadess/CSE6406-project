@@ -41,6 +41,9 @@ class Stage1AnalysisTests(unittest.TestCase):
         self.assertEqual(summary[0]["n_supported_branches"], 3)
         self.assertAlmostEqual(summary[0]["branch_error_rate"], 3 / 4)
         self.assertAlmostEqual(summary[0]["p_wrong_given_support_ge_0.95"], 0.5)
+        self.assertIsNotNone(summary[0]["brier_score"])
+        self.assertIsNotNone(summary[0]["expected_calibration_error"])
+        self.assertIn("mean_support", calibration[0])
         self.assertEqual(replicate_summary[0]["replicate"], 1)
 
     def test_wilson_handles_boundary(self):

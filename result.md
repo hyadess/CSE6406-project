@@ -21,27 +21,32 @@ explicit and reproducible.
 
 ## Verification completed
 
-- The focused active test suite passes.
+- The focused active test suite passes, including contracted-ASTRAL, hybrid
+  wASTRAL, calibration-score, and ILS-gate tests.
 - All active Python modules compile.
 - SimPhy 1.0.2 and IQ-TREE 2.4.0 pass Stage 1 preflight.
 - A real-tool smoke run exercised low/high ILS and all five inference models.
 - The smoke run produced branch observations, calibration, pooled summaries,
   replicate summaries, and empirical ILS separation outputs.
-- ASTRAL-IV and wASTRAL command construction, support preparation, topology
-  preservation, RF scoring, and delta direction are covered by tests.
+- Resolved and 0.90-aBayes-contracted ASTRAL-IV, support-only and hybrid
+  wASTRAL, support preparation, RF scoring, and paired delta direction are
+  covered by tests.
 
 The smoke run verifies the code path only; its two loci and 60 sites are not a
 scientific sample and are not reported as experimental evidence.
 
 ## Production status
 
-The complete production grid has not been run. Therefore, the project does not
+The revised 50-replicate production grid has not been run. Earlier partial
+artifacts under `work/full_experiment` belong to the superseded 10-replicate
+design and must not be mixed with `work/full_experiment_r50`. Therefore, the
+project does not
 yet claim a Stage 1 model-ordering result or a Stage 2 weighted-versus-
 unweighted result.
 
-The current machine still needs the ASTER executables `astral4` and `wastral`
-before a full Stage 2 run. `INSTALL.md` contains the installation, preflight,
-pilot, and production commands.
+The current machine has ASTRAL-IV and wASTRAL v1.25.4.8. Preflight now records
+each executable's path, reported version, and SHA-256 digest. `INSTALL.md`
+contains the installation, preflight, pilot, and production commands.
 
 ## Previous pipeline
 

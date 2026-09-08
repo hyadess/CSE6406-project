@@ -16,6 +16,8 @@ from cse6406.stage1.branch_scorer import BranchScorer
 from cse6406.stage1.calibration import CalibrationAnalyzer
 from cse6406.stage1.ils import ILSAnalyzer
 from cse6406.stage2.astral import AstralRunner
+from cse6406.stage2.contractor import SupportTreeContractor
+from cse6406.stage2.hybrid_wastral import HybridWeightedAstralRunner
 from cse6406.stage2.species_tree import SpeciesTreeEvaluator
 from cse6406.stage2.support_preparer import SupportTreePreparer
 from cse6406.stage2.wastral import WeightedAstralRunner
@@ -31,14 +33,14 @@ class ExperimentPipeline:
         self.runner = CommandRunner()
         self.writer = CSVResultWriter()
 
-    def preflight(self, *, stage2: bool = True) -> dict[str, str]:
+    def preflight(self, *, stage2: bool = True) -> dict[str, dict[str, str]]:
         required = ["simphy", "iqtree"] + (["astral", "wastral"] if stage2 else [])
         self.tools.require(*required)
-        versions = {name: self.tools.version(name) for name in required}
+        metadata = {name: self.tools.metadata(name) for name in required}
         self.design.output.mkdir(parents=True, exist_ok=True)
         self._validate_or_write_design()
-        (self.design.output / "preflight.json").write_text(json.dumps(versions, indent=2) + "\n")
-        return versions
+        (self.design.output / "preflight.json").write_text(json.dumps(metadata, indent=2) + "\n")
+        return metadata
 
     def run(self, *, stage2: bool = True) -> None:
         self.preflight(stage2=stage2)
@@ -48,7 +50,10 @@ class ExperimentPipeline:
         inferer = IQTreeInferer(self.tools.iqtree, self.runner)
         scorer, calibration, ils_analyzer = BranchScorer(), CalibrationAnalyzer(), ILSAnalyzer()
         all_observations, ils_rows, stage2_rows = [], [], []
+        histories = {}
 
+        # Validate the intended biological treatments before starting the much
+        # more expensive alignment and gene-tree inference stages.
         for level in self.design.ils_levels:
             for replicate in range(1, self.design.replicates + 1):
                 species_tree, true_gene_trees = simulator.run(self.design, level.name, replicate)
@@ -56,10 +61,27 @@ class ExperimentPipeline:
                     raise PipelineError(
                         f"Expected {self.design.loci} true gene trees; found {len(true_gene_trees)}"
                     )
+                histories[(level.name, replicate)] = (species_tree, true_gene_trees)
                 ils_rows.append(ils_analyzer.analyze(
                     ils=level.name, replicate=replicate, species_tree=species_tree,
                     gene_trees=true_gene_trees, population_size=level.population_size,
                 ))
+
+        results = self.design.output / "results"
+        ils_summary = ils_analyzer.summarize(
+            ils_rows,
+            low_max=self.design.low_ils_max_nrf,
+            high_min=self.design.high_ils_min_nrf,
+            minimum_gap=self.design.minimum_ils_nrf_gap,
+        )
+        self.writer.write(results / "ils_verification.csv", ils_rows)
+        self.writer.write(results / "ils_summary.csv", ils_summary)
+        if self.design.enforce_ils_gate:
+            ils_analyzer.require_acceptable(ils_summary)
+
+        for level in self.design.ils_levels:
+            for replicate in range(1, self.design.replicates + 1):
+                species_tree, true_gene_trees = histories[(level.name, replicate)]
                 for length in self.design.sequence_lengths:
                     alignments = alisim.run(
                         self.design, level.name, replicate, length, true_gene_trees
@@ -83,13 +105,10 @@ class ExperimentPipeline:
         branches, calibration_rows, summary, replicate_summary = calibration.analyze(
             all_observations
         )
-        results = self.design.output / "results"
         self.writer.write(results / "stage1_branches.csv", branches)
         self.writer.write(results / "stage1_calibration.csv", calibration_rows)
         self.writer.write(results / "stage1_summary.csv", summary)
         self.writer.write(results / "stage1_replicate_summary.csv", replicate_summary)
-        self.writer.write(results / "ils_verification.csv", ils_rows)
-        self.writer.write(results / "ils_summary.csv", ils_analyzer.summarize(ils_rows))
         self.writer.write(results / "stage2_species_tree_error.csv", stage2_rows)
 
     def _validate_or_write_design(self) -> None:
@@ -115,12 +134,28 @@ class ExperimentPipeline:
         astral_tree = AstralRunner(self.tools.astral, self.runner).run(
             input_trees, output / "astral_unweighted.tre", threads=self.design.threads
         )
+        threshold_label = f"{self.design.contracted_abayes_threshold:.2f}"
+        contracted_input = output / f"estimated_gene_trees_contracted_abayes_{threshold_label}.tre"
+        SupportTreeContractor().contract(
+            input_trees, contracted_input,
+            threshold=self.design.contracted_abayes_threshold,
+        )
+        contracted_astral_tree = AstralRunner(self.tools.astral, self.runner).run(
+            contracted_input, output / f"astral_contracted_abayes_{threshold_label}.tre",
+            threads=self.design.threads,
+        )
         weighted_input = output / "estimated_gene_trees_wastral_ready.tre"
         SupportTreePreparer().prepare(input_trees, weighted_input)
         wastral_tree = WeightedAstralRunner(self.tools.wastral, self.runner).run(
             weighted_input, output / "wastral_support.tre", threads=self.design.threads
         )
+        hybrid_wastral_tree = HybridWeightedAstralRunner(
+            self.tools.wastral, self.runner
+        ).run(
+            weighted_input, output / "wastral_hybrid.tre", threads=self.design.threads
+        )
         return SpeciesTreeEvaluator().evaluate(
             condition=condition, true_species_tree=species_tree,
-            astral_tree=astral_tree, wastral_tree=wastral_tree,
+            astral_tree=astral_tree, contracted_astral_tree=contracted_astral_tree,
+            wastral_tree=wastral_tree, hybrid_wastral_tree=hybrid_wastral_tree,
         )

@@ -28,13 +28,15 @@ class SimPhySimulator:
             raise PipelineError(f"Partial SimPhy output exists: {destination}")
 
         level = design.ils_level(ils)
+        # SimPhy parameterizes e:r as an exponential distribution with mean 1/r.
+        substitution_rate_parameter = 1 / design.substitution_rate_mean
         destination.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="cse6406_simphy_") as temporary:
             generated = Path(temporary) / "output"
             command = [
                 self.binary, "-rs", 1, "-rl", f"f:{design.loci}", "-rg", 1,
                 "-sp", f"f:{level.population_size}",
-                "-su", f"e:{_decimal(design.substitution_rate)}", "-si", "f:1",
+                "-su", f"e:{_decimal(substitution_rate_parameter)}", "-si", "f:1",
                 "-cs", design.seed + replicate, "-o", generated, "-ot", 0, "-v", 0,
                 "-sb", f"f:{_decimal(design.birth_rate)}", "-sl", f"f:{design.taxa - 1}",
                 "-st", f"f:{design.tree_height}", "-so", "f:1",

@@ -10,13 +10,13 @@ listed immediately below the figure.
 flowchart TB
     subgraph S0[Experimental design]
         direction LR
-        PROFILE["Run profiles<br/>paper subset: 21 taxa, 10 loci, 2 replicates<br/>production: 51 taxa, 200 loci, 10 replicates"]
+        PROFILE["Run profiles<br/>paper subset: 21 taxa, 10 loci, 2 replicates<br/>production: 51 taxa, 200 loci, 50 replicates"]
         ILS["ILS treatments<br/>low: Ne = 100,000<br/>high: Ne = 1,000,000"]
     end
 
     subgraph S1[Tree simulation]
         direction LR
-        SIMPHY["SimPhy under the multispecies coalescent<br/>birth rate = 1e-7; tree height = 2,500,000"]
+        SIMPHY["Conditioned SimPhy MSC histories<br/>50 ingroup + 1 outgroup; one individual/species<br/>birth = 1e-7; ingroup height = 2,500,000<br/>substitution rate exponential mean = 1e-7"]
         TRUE_ST["True species tree"]
         TRUE_GT["True gene tree for every locus"]
     end
@@ -29,7 +29,7 @@ flowchart TB
     subgraph S2[Sequence simulation]
         direction LR
         LENGTH["Sequence-length options<br/>200, 800, 1,600 bp"]
-        GENMODEL["Generating model<br/>fixed-parameter GTR+F+G4"]
+        GENMODEL["Generating model<br/>GTR rates 1,2,1,1,2<br/>F: A/C/G/T = .30/.20/.20/.30<br/>G4: alpha = .20"]
         ALISIM["IQ-TREE AliSim"]
         ALIGN["One alignment per locus<br/>shared across all analysis models"]
     end
@@ -52,9 +52,9 @@ flowchart TB
 
     subgraph S4[Stage 1: mechanism]
         direction LR
-        ILS_CHECK["Empirical ILS verification<br/>true gene tree vs true species tree nRF"]
+        ILS_CHECK["Pre-inference ILS gate<br/>low nRF <= .25; high >= .55; gap >= .30"]
         BRANCH["Branch correctness and support calibration<br/>estimated split vs corresponding true-gene split"]
-        S1OUT["Stage 1 outputs<br/>branch error; support bins<br/>P(wrong | support >= 0.95)<br/>P(wrong | support >= 0.99)<br/>missing-support counts"]
+        S1OUT["Stage 1 outputs<br/>branch error; Brier score; ECE; support bins<br/>P(wrong | support >= 0.95/.99)<br/>missing-support counts"]
     end
 
     TRUE_GT -->|"[7]"| ILS_CHECK
@@ -66,12 +66,12 @@ flowchart TB
 
     subgraph S5[Stage 2: consequence]
         direction LR
-        ASTRAL["ASTRAL-IV<br/>unweighted topology analysis; -u 0"]
+        ASTRAL["ASTRAL-IV baselines<br/>resolved input<br/>aBayes < .90 contracted input"]
         PREP["wASTRAL support preparation<br/>preserve topology; missing internal support = 1/3"]
-        WASTRAL["wASTRAL<br/>support-only mode 2; -B aBayes scale; -u 0"]
-        UST["Unweighted species tree"]
-        WST["Support-weighted species tree"]
-        EVAL["Species-tree evaluation<br/>normalized RF against true species tree<br/>delta = weighted nRF - unweighted nRF"]
+        WASTRAL["wASTRAL<br/>support-only mode 2; -B<br/>default hybrid; -B"]
+        UST["Resolved + contracted<br/>unweighted species trees"]
+        WST["Support-only + hybrid<br/>weighted species trees"]
+        EVAL["Species-tree evaluation<br/>normalized RF against truth<br/>paired deltas vs both baselines"]
     end
 
     EST_GT -->|"[5]"| ASTRAL
@@ -125,11 +125,12 @@ flowchart TB
 ## Implemented comparison grid
 
 The same alignment for a locus is reused across all five IQ-TREE analysis
-models. Each resulting estimated-gene-tree set is then sent to both ASTRAL-IV
-and wASTRAL. This paired design isolates the effect of support weighting within
+models. Each resulting estimated-gene-tree set is sent to resolved and
+0.90-aBayes-contracted ASTRAL-IV, support-only wASTRAL, and default hybrid
+wASTRAL. This paired design isolates the effect of support weighting within
 each combination of ILS level, sequence length, replicate, and analysis model.
 
-The Stage 2 delta is interpreted as follows:
+Each Stage 2 weighted-minus-baseline delta is interpreted as follows:
 
 - `delta < 0`: support weighting helped.
 - `delta = 0`: support weighting made no topological difference.

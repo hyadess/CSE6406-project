@@ -22,7 +22,7 @@ subset instructions remain below for a later confirmation run.
 | ILS treatments | Low and high | Preserves the biological-discordance contrast |
 | Sequence lengths | 200, 800, and 1,600 bp | Preserves the planned error gradient; all occur in the paper's S100 study |
 | IQ-TREE models | GTR+G4, GTR, HKY+G4, HKY, and JC | Preserves the complete model-misspecification contrast |
-| Species-tree methods | ASTRAL-IV and wASTRAL | Preserves the weighted-versus-unweighted comparison |
+| Species-tree methods | Resolved/contracted ASTRAL-IV and support-only/hybrid wASTRAL | Preserves all four production comparisons |
 | Random seed | 6,406,001 | Makes the run reproducible |
 
 The subset performs 7,500 IQ-TREE analyses:
@@ -31,8 +31,9 @@ The subset performs 7,500 IQ-TREE analyses:
 2 ILS levels x 5 replicates x 3 lengths x 5 models x 50 loci = 7,500
 ```
 
-It also produces 1,500 alignments and 150 paired ASTRAL/wASTRAL conditions.
-This is eight times smaller than the 60,000-analysis production grid.
+It also produces 1,500 alignments and 150 paired condition sets, each with all
+four species-tree methods. This is 40 times smaller than the 300,000-analysis
+production grid.
 
 ## Scientific scope
 
@@ -53,7 +54,7 @@ aBayes support, ASTRAL-IV, and support-weighted wASTRAL. Therefore,
 
 This is the smallest recommended structured run for this project. It retains
 both ILS levels, all three planned sequence lengths, all five gene-tree models,
-and both species-tree methods. It reduces taxa, loci, and independent
+and all four species-tree methods. It reduces taxa, loci, and independent
 replicates to shorten runtime.
 
 | Factor | Fast setting |
@@ -64,7 +65,7 @@ replicates to shorten runtime.
 | ILS treatments | Low and high |
 | Sequence lengths | 200, 800, and 1,600 bp |
 | IQ-TREE models | GTR+G4, GTR, HKY+G4, HKY, and JC |
-| Species-tree methods | ASTRAL-IV and wASTRAL |
+| Species-tree methods | Resolved/contracted ASTRAL-IV and support-only/hybrid wASTRAL |
 | Random seed | 6,406,001 |
 
 The fast subset performs:
@@ -82,6 +83,10 @@ pipeline and matches the repository's documented smaller-production setting,
 but it cannot reproduce the taxon-scale behavior of S100 or S200. Treat these
 results as a fast exploratory check of the complete experimental structure,
 not as publication-strength evidence.
+
+The commands use `--skip-ils-gate` because two replicates and ten loci cannot
+reliably certify the production nRF ranges. ILS summaries are still written
+and must be inspected; only the automatic stop is disabled.
 
 ## A. Prepare and validate the fast subset
 
@@ -112,7 +117,7 @@ python -m unittest discover -s tests -v
 Check the toolchain and freeze the 21-taxon, 10 x 2 design.
 
 ```bash
-python run_project.py --check --output work/paper_subset_10x2 --taxa 21 --loci 10 --replicates 2 --lengths 200 800 1600 --models gtr_g4 gtr hky_g4 hky jc --seed 6406001 --threads AUTO
+python run_project.py --check --skip-ils-gate --output work/paper_subset_10x2 --taxa 21 --loci 10 --replicates 2 --lengths 200 800 1600 --models gtr_g4 gtr hky_g4 hky jc --seed 6406001 --threads AUTO
 ```
 
 Review the frozen design before starting the run.
@@ -126,13 +131,13 @@ cat work/paper_subset_10x2/design.json
 Run the experiment in the current terminal.
 
 ```bash
-python run_project.py --output work/paper_subset_10x2 --taxa 21 --loci 10 --replicates 2 --lengths 200 800 1600 --models gtr_g4 gtr hky_g4 hky jc --seed 6406001 --threads AUTO
+python run_project.py --skip-ils-gate --output work/paper_subset_10x2 --taxa 21 --loci 10 --replicates 2 --lengths 200 800 1600 --models gtr_g4 gtr hky_g4 hky jc --seed 6406001 --threads AUTO
 ```
 
 Alternatively, run it in the background after the preflight command succeeds.
 
 ```bash
-nohup python run_project.py --output work/paper_subset_10x2 --taxa 21 --loci 10 --replicates 2 --lengths 200 800 1600 --models gtr_g4 gtr hky_g4 hky jc --seed 6406001 --threads AUTO > work/paper_subset_10x2/run.log 2>&1 & echo $! > work/paper_subset_10x2/run.pid
+nohup python run_project.py --skip-ils-gate --output work/paper_subset_10x2 --taxa 21 --loci 10 --replicates 2 --lengths 200 800 1600 --models gtr_g4 gtr hky_g4 hky jc --seed 6406001 --threads AUTO > work/paper_subset_10x2/run.log 2>&1 & echo $! > work/paper_subset_10x2/run.pid
 ```
 
 Use only one of the two run commands.
@@ -157,16 +162,13 @@ Count simulated alignments; completion requires 120.
 find work/paper_subset_10x2 -type f -name 'locus_*.phy' | wc -l
 ```
 
-Count unweighted species trees; completion requires 60.
+Count each species-tree method; completion requires 60 per command.
 
 ```bash
 find work/paper_subset_10x2 -type f -name 'astral_unweighted.tre' | wc -l
-```
-
-Count weighted species trees; completion requires 60.
-
-```bash
+find work/paper_subset_10x2 -type f -name 'astral_contracted_abayes_0.90.tre' | wc -l
 find work/paper_subset_10x2 -type f -name 'wastral_support.tre' | wc -l
+find work/paper_subset_10x2 -type f -name 'wastral_hybrid.tre' | wc -l
 ```
 
 Stop the active child tool and then the background pipeline without deleting outputs.
@@ -178,7 +180,7 @@ pipeline_pid="$(cat work/paper_subset_10x2/run.pid)"; pkill -TERM -P "$pipeline_
 Resume later with exactly the same parameters.
 
 ```bash
-python run_project.py --output work/paper_subset_10x2 --taxa 21 --loci 10 --replicates 2 --lengths 200 800 1600 --models gtr_g4 gtr hky_g4 hky jc --seed 6406001 --threads AUTO
+python run_project.py --skip-ils-gate --output work/paper_subset_10x2 --taxa 21 --loci 10 --replicates 2 --lengths 200 800 1600 --models gtr_g4 gtr hky_g4 hky jc --seed 6406001 --threads AUTO
 ```
 
 ## D. Verify and inspect the fast subset
@@ -305,16 +307,13 @@ Count completed alignments; the final expected count is 1,500.
 find work/paper_subset -type f -name 'locus_*.phy' | wc -l
 ```
 
-Count completed unweighted species trees; the final expected count is 150.
+Count each species-tree method; the final expected count is 150 per command.
 
 ```bash
 find work/paper_subset -type f -name 'astral_unweighted.tre' | wc -l
-```
-
-Count completed weighted species trees; the final expected count is 150.
-
-```bash
+find work/paper_subset -type f -name 'astral_contracted_abayes_0.90.tre' | wc -l
 find work/paper_subset -type f -name 'wastral_support.tre' | wc -l
+find work/paper_subset -type f -name 'wastral_hybrid.tre' | wc -l
 ```
 
 Stop the active child tool first and then stop the background pipeline, without deleting completed outputs.
@@ -372,13 +371,13 @@ Inspect support calibration across models, lengths, and ILS levels.
 column -s, -t < work/paper_subset/results/stage1_calibration.csv | less -S
 ```
 
-Inspect the paired ASTRAL and wASTRAL species-tree errors.
+Inspect the four paired ASTRAL and wASTRAL species-tree errors.
 
 ```bash
 column -s, -t < work/paper_subset/results/stage2_species_tree_error.csv | less -S
 ```
 
-Interpret the Stage 2 `delta` column as:
+Interpret each Stage 2 weighted-minus-baseline `delta` column as:
 
 - `delta < 0`: weighting helped;
 - `delta = 0`: weighting made no topological difference;

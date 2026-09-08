@@ -37,7 +37,21 @@ IQ-TREE performs both AliSim sequence generation and ML gene-tree inference
 with aBayes support. The fixed analysis grid is `GTR+G4`, `GTR`, `HKY+G4`,
 `HKY`, and `JC`.
 
+AliSim generates data with
+`GTR{1,2,1,1,2}+F{0.30,0.20,0.20,0.30}+G4{0.20}`. Here `+F{...}` fixes
+unequal A/C/G/T frequencies at 0.30/0.20/0.20/0.30; it is useful because it
+does not force the equal-frequency assumption used by JC. `+G4{0.20}` models
+strong variation in evolutionary speed among sites using four gamma
+categories. See `README.md` for the complete plain-language explanation.
+
 ## 3. Build SimPhy
+
+The production command conditions the ingroup tree on 50 leaves and a height
+of 2,500,000 generations, adds one outgroup, and samples one individual per
+species. `-su e:10000000` is an exponential substitution-rate distribution
+with mean `1e-7`; SimPhy uses the reciprocal mean as the exponential argument.
+The pipeline stores this scientifically meaningful mean as
+`substitution_rate_mean` and converts it to SimPhy syntax.
 
 Install native libraries in the same Conda environment:
 
@@ -94,8 +108,10 @@ cd ../CSE6406-project
 The project uses:
 
 - `astral4 -u 0` for the unweighted topology analysis;
+- `astral4 -u 0` after contracting aBayes branches below 0.90;
 - `wastral --mode 2 -B -u 0` for support-only weighting with local Bayesian
-  support scaled from 0.333 to 1.
+  support scaled from 0.333 to 1;
+- default `wastral -B -u 0` for hybrid support-plus-length weighting.
 
 These choices follow the current official ASTER tutorials. The weighted input
 preparer converts IQ-TREE labels such as `/0.994` to numeric values. If
@@ -132,6 +148,11 @@ Preflight the full toolchain:
 python run_project.py --check
 ```
 
+`preflight.json` records the resolved path, reported version, and SHA-256
+digest of every executable. SimPhy 1.0.2 does not report its version through a
+standard flag, so its pinned installation instructions plus the executable
+digest identify the exact build.
+
 If ASTER is not installed yet, verify the Stage 1 toolchain only:
 
 ```bash
@@ -149,12 +170,13 @@ python run_project.py \
   --loci 2 \
   --replicates 1 \
   --lengths 60 \
+  --skip-ils-gate \
   --threads 1
 ```
 
 ## 7. Run the experiment
 
-The preregistered default grid is 51 taxa, 200 loci, 10 replicates, two ILS
+The preregistered default grid is 51 taxa, 200 loci, 50 replicates, two ILS
 levels, three sequence lengths, and five IQ-TREE models:
 
 ```bash
@@ -162,8 +184,8 @@ python run_project.py --check
 python run_project.py --threads AUTO
 ```
 
-This implies 60,000 IQ-TREE locus analyses
-(`2 × 10 × 3 × 5 × 200`) and 300 paired species-tree conditions. Run it on an
+This implies 300,000 IQ-TREE locus analyses
+(`2 × 50 × 3 × 5 × 200`) and 1,500 paired species-tree conditions. Run it on an
 appropriate workstation or scheduler. The workflow is resumable: validated
 trees and alignments are reused on restart.
 
@@ -207,12 +229,12 @@ logs/                             exact commands and captured program output
 
 ```text
 ils_verification.csv              per-replicate true-gene/species discordance
-ils_summary.csv                   pooled check that high ILS exceeds low ILS
+ils_summary.csv                   preregistered low/high ILS acceptance checks
 stage1_branches.csv               one row per estimated internal branch
-stage1_calibration.csv            pooled P(correct | support bin)
-stage1_summary.csv                pooled branch/high-support error summaries
+stage1_calibration.csv            calibration and mean support by bin
+stage1_summary.csv                branch error, Brier/ECE, high-support errors
 stage1_replicate_summary.csv      replicate-level Stage 1 summaries
-stage2_species_tree_error.csv     ASTRAL, wASTRAL, and paired delta errors
+stage2_species_tree_error.csv     four methods, nRF errors, and paired deltas
 ```
 
 `design.json`, `preflight.json`, per-command logs, and support-imputation logs

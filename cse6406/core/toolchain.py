@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 import shutil
 import subprocess
@@ -51,15 +52,35 @@ class Toolchain:
         if binary is None:
             return "MISSING"
         attempts = ([str(binary), "--version"], [str(binary), "-h"])
+        fallback = ""
         for command in attempts:
             try:
                 result = subprocess.run(
                     command, text=True, stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT, timeout=20, check=False,
                 )
-                line = next((x.strip() for x in result.stdout.splitlines() if x.strip()), "")
-                if line:
-                    return line
+                lines = [x.strip() for x in result.stdout.splitlines() if x.strip()]
+                explicit = next((x for x in lines if x.lower().startswith("version:")), "")
+                if explicit:
+                    return explicit.removeprefix("Version:").strip()
+                if lines and not fallback:
+                    fallback = lines[0]
             except (OSError, subprocess.TimeoutExpired):
                 pass
-        return str(binary)
+        if name == "simphy":
+            return "unreported by executable"
+        return fallback or "unreported by executable"
+
+    def metadata(self, name: str) -> dict[str, str]:
+        binary = getattr(self, name)
+        if binary is None:
+            return {"path": "MISSING", "version": "MISSING", "sha256": "MISSING"}
+        digest = hashlib.sha256()
+        with binary.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return {
+            "path": str(binary),
+            "version": self.version(name),
+            "sha256": digest.hexdigest(),
+        }
