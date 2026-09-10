@@ -1,0 +1,57 @@
+{
+  "output": "/Users/fahim/CSE6406-project/work/paper_subset_7x2_L1600",
+  "taxa": 21,
+  "loci": 7,
+  "replicates": 2,
+  "sequence_lengths": [
+    1600
+  ],
+  "ils_levels": [
+    {
+      "name": "low",
+      "population_size": 100000
+    },
+    {
+      "name": "high",
+      "population_size": 1000000
+    }
+  ],
+  "models": [
+    {
+      "name": "gtr_g4",
+      "iqtree_model": "GTR+G4",
+      "role": "Correct-model reference retaining substitution complexity and rate heterogeneity."
+    },
+    {
+      "name": "gtr",
+      "iqtree_model": "GTR",
+      "role": "Removes among-site rate heterogeneity while retaining GTR exchangeabilities."
+    },
+    {
+      "name": "hky_g4",
+      "iqtree_model": "HKY+G4",
+      "role": "Simplifies substitution rates while retaining among-site rate heterogeneity."
+    },
+    {
+      "name": "hky",
+      "iqtree_model": "HKY",
+      "role": "Combines a simpler substitution model with removal of rate heterogeneity."
+    },
+    {
+      "name": "jc",
+      "iqtree_model": "JC",
+      "role": "Severe stress test with equal substitution rates, frequencies, and no gamma."
+    }
+  ],
+  "seed": 6406001,
+  "threads": "AUTO",
+  "birth_rate": 1e-07,
+  "tree_height": 2500000,
+  "substitution_rate_mean": 1e-07,
+  "generating_model": "GTR{1,2,1,1,2}+F{0.30,0.20,0.20,0.30}+G4{0.20}",
+  "contracted_abayes_threshold": 0.9,
+  "low_ils_max_nrf": 0.25,
+  "high_ils_min_nrf": 0.55,
+  "minimum_ils_nrf_gap": 0.3,
+  "enforce_ils_gate": false
+}
