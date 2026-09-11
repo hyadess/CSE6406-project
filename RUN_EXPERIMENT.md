@@ -19,6 +19,12 @@ The production design is:
 | Species-tree methods | Resolved/contracted ASTRAL-IV; support-only/hybrid wASTRAL |
 | Random seed | 6,406,001 |
 
+> **Running this on more than one core:** every command below drives the
+> single-process runner `run_project.py`. `run_project_parallel.py` executes
+> the identical design across worker processes and produces byte-identical
+> results in a fraction of the wall-clock time. See `RUN_PARALLEL.md`; the
+> setup, monitoring, and verification steps here apply unchanged.
+
 This produces 300,000 IQ-TREE gene-tree analyses
 (`2 ILS x 50 replicates x 3 lengths x 5 models x 200 loci`) and 1,500 paired
 condition rows, each containing four species-tree methods. Expect substantial

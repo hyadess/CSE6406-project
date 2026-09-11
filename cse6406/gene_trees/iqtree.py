@@ -12,27 +12,36 @@ class IQTreeInferer:
     def __init__(self, binary: Path, runner: CommandRunner):
         self.binary, self.runner = binary, runner
 
+    def run_locus(
+        self, design: ExperimentalDesign, condition: ExperimentCondition,
+        locus: int, alignment: Path, *, threads: str | None = None,
+    ) -> Path:
+        """Infer exactly one gene tree; the unit of work shared with the parallel runner."""
+        output = design.model_dir(condition)
+        output.mkdir(parents=True, exist_ok=True)
+        prefix = output / f"locus_{locus:04d}"
+        tree = prefix.with_suffix(".treefile")
+        if not tree.is_file():
+            self.runner.run(
+                [self.binary, "-s", alignment.resolve(), "-m", condition.model.iqtree_model,
+                 "--abayes", "-T", design.threads if threads is None else threads,
+                 "--seed", design.seed + condition.replicate * 100_000 + locus,
+                 "--prefix", prefix, "--redo", "--quiet"],
+                log=design.replicate_dir(condition.ils, condition.replicate) / "logs"
+                / f"iqtree_L{condition.sequence_length}_{condition.model.name}"
+                f"_locus_{locus:04d}.log",
+            )
+        if not tree.is_file() or not tree.read_text().strip().endswith(";"):
+            raise PipelineError(f"Invalid IQ-TREE output: {tree}")
+        return tree
+
     def run(
         self, design: ExperimentalDesign, condition: ExperimentCondition,
-        alignments: list[Path],
+        alignments: list[Path], *, threads: str | None = None,
     ) -> list[Path]:
         output = design.model_dir(condition)
         output.mkdir(parents=True, exist_ok=True)
-        trees = []
-        for locus, alignment in enumerate(alignments, 1):
-            prefix = output / f"locus_{locus:04d}"
-            tree = prefix.with_suffix(".treefile")
-            if not tree.is_file():
-                self.runner.run(
-                    [self.binary, "-s", alignment.resolve(), "-m", condition.model.iqtree_model,
-                     "--abayes", "-T", design.threads,
-                     "--seed", design.seed + condition.replicate * 100_000 + locus,
-                     "--prefix", prefix, "--redo", "--quiet"],
-                    log=design.replicate_dir(condition.ils, condition.replicate) / "logs"
-                    / f"iqtree_L{condition.sequence_length}_{condition.model.name}"
-                    f"_locus_{locus:04d}.log",
-                )
-            if not tree.is_file() or not tree.read_text().strip().endswith(";"):
-                raise PipelineError(f"Invalid IQ-TREE output: {tree}")
-            trees.append(tree)
-        return trees
+        return [
+            self.run_locus(design, condition, locus, alignment, threads=threads)
+            for locus, alignment in enumerate(alignments, 1)
+        ]
