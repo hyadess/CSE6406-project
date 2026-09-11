@@ -1,0 +1,131 @@
+IQ-TREE multicore version 2.4.0 for MacOS ARM 64-bit built Feb 12 2025
+Developed by Bui Quang Minh, Nguyen Lam Tung, Olga Chernomor, Heiko Schmidt,
+Dominik Schrempf, Michael Woodhams, Ly Trong Nhan, Thomas Wong
+
+Host:    Fahims-MacBook-Air.local (SSE4.2, 16 GB RAM)
+Command: /Users/fahim/miniconda3/envs/cse6406/bin/iqtree2 -s /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_low/replicate_09/alignments/L1600/locus_0040.phy -m HKY+G4 --abayes -T AUTO --seed 7306041 --prefix /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_low/replicate_09/estimated_gene_trees/L1600/hky_g4/locus_0040 --redo --quiet
+Seed:    7306041 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Fri Sep 11 19:43:08 2026
+Kernel:  SSE2 - auto-detect threads (10 CPU cores detected)
+
+Reading alignment file /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_low/replicate_09/alignments/L1600/locus_0040.phy ... Phylip format detected
+Alignment most likely contains DNA/RNA sequences
+Alignment has 21 sequences with 1600 columns, 962 distinct patterns
+871 parsimony-informative, 129 singleton sites, 600 constant sites
+        Gap/Ambiguity  Composition  p-value
+Analyzing sequences: done in 3.38554e-05 secs using 144.7% CPU
+   1  0_0_0     0.00%    passed     68.91%
+   2  8_0_0     0.00%    passed     49.52%
+   3  16_0_0    0.00%    passed     96.76%
+   4  5_0_0     0.00%    passed     59.32%
+   5  15_0_0    0.00%    passed     64.13%
+   6  17_0_0    0.00%    passed     80.53%
+   7  18_0_0    0.00%    passed     84.77%
+   8  2_0_0     0.00%    passed     87.51%
+   9  10_0_0    0.00%    passed     71.05%
+  10  7_0_0     0.00%    passed     65.40%
+  11  13_0_0    0.00%    passed     82.46%
+  12  14_0_0    0.00%    passed     83.23%
+  13  11_0_0    0.00%    passed     87.68%
+  14  4_0_0     0.00%    passed     88.64%
+  15  19_0_0    0.00%    passed     99.58%
+  16  6_0_0     0.00%    passed     89.15%
+  17  20_0_0    0.00%    passed     97.51%
+  18  12_0_0    0.00%    passed     67.27%
+  19  9_0_0     0.00%    passed     61.26%
+  20  3_0_0     0.00%    passed     74.64%
+  21  1_0_0     0.00%    passed     54.74%
+****  TOTAL     0.00%  0 sequences failed composition chi2 test (p-value<5%; df=3)
+
+Create initial parsimony tree by phylogenetic likelihood library (PLL)... 0.001 seconds
+
+NOTE: 2 MB RAM (0 GB) is required!
+Measuring multi-threading efficiency up to 10 CPU cores
+Increase to 10 rounds for branch lengths
+689 trees examined
+Threads: 1 / Time: 10.005 sec / Speedup: 1.000 / Efficiency: 100% / LogL: -25175
+Threads: 2 / Time: 11.794 sec / Speedup: 0.848 / Efficiency: 42% / LogL: -25175
+BEST NUMBER OF THREADS: 1
+
+Estimate model parameters (epsilon = 0.100)
+1. Initial log-likelihood: -23500.827
+2. Current log-likelihood: -22522.235
+3. Current log-likelihood: -22402.146
+4. Current log-likelihood: -22387.107
+5. Current log-likelihood: -22383.309
+6. Current log-likelihood: -22382.160
+7. Current log-likelihood: -22381.744
+8. Current log-likelihood: -22381.623
+Optimal log-likelihood: -22381.530
+Rate parameters:  A-C: 1.00000  A-G: 1.98749  A-T: 1.00000  C-G: 1.00000  C-T: 1.98749  G-T: 1.00000
+Base frequencies:  A: 0.300  C: 0.206  G: 0.198  T: 0.296
+Gamma shape alpha: 0.206
+Parameters optimization took 8 rounds (0.082 sec)
+Wrote distance file to... 
+Computing ML distances based on estimated model parameters...
+Calculating distance matrix: done in 0.000985146 secs using 99.17% CPU
+Computing ML distances took 0.001040 sec (of wall-clock time) 0.001019 sec (of CPU time)
+Setting up auxiliary I and S matrices: done in 1.40667e-05 secs using 71.09% CPU
+Computing RapidNJ tree took 0.000054 sec (of wall-clock time) 0.000056 sec (of CPU time)
+Log-likelihood of RapidNJ tree: -22396.790
+--------------------------------------------------------------------
+|             INITIALIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+Generating 98 parsimony trees... 0.093 second
+Computing log-likelihood of 98 initial trees ... 0.208 seconds
+Current best score: -22381.530
+
+Do NNI search on 20 best initial trees
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 1: -22362.869
+Iteration 10 / LogL: -22362.904 / Time: 0h:0m:22s
+UPDATE BEST LOG-LIKELIHOOD: -22362.867
+Iteration 20 / LogL: -22362.882 / Time: 0h:0m:22s
+Finish initializing candidate tree set (4)
+Current best tree score: -22362.867 / CPU time: 0.986
+Number of iterations: 20
+--------------------------------------------------------------------
+|               OPTIMIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+Iteration 30 / LogL: -22370.188 / Time: 0h:0m:23s (0h:0m:57s left)
+Iteration 40 / LogL: -22389.806 / Time: 0h:0m:23s (0h:0m:37s left)
+Iteration 50 / LogL: -22363.057 / Time: 0h:0m:24s (0h:0m:25s left)
+Iteration 60 / LogL: -22375.305 / Time: 0h:0m:24s (0h:0m:16s left)
+Iteration 70 / LogL: -22375.026 / Time: 0h:0m:24s (0h:0m:11s left)
+UPDATE BEST LOG-LIKELIHOOD: -22362.867
+Iteration 80 / LogL: -22375.304 / Time: 0h:0m:25s (0h:0m:6s left)
+Iteration 90 / LogL: -22389.741 / Time: 0h:0m:25s (0h:0m:3s left)
+Iteration 100 / LogL: -22375.305 / Time: 0h:0m:26s (0h:0m:0s left)
+TREE SEARCH COMPLETED AFTER 102 ITERATIONS / Time: 0h:0m:26s
+
+--------------------------------------------------------------------
+|                    FINALIZING TREE SEARCH                        |
+--------------------------------------------------------------------
+Performs final model parameters optimization
+Estimate model parameters (epsilon = 0.010)
+1. Initial log-likelihood: -22362.867
+2. Current log-likelihood: -22362.855
+Optimal log-likelihood: -22362.843
+Rate parameters:  A-C: 1.00000  A-G: 2.01088  A-T: 1.00000  C-G: 1.00000  C-T: 2.01088  G-T: 1.00000
+Base frequencies:  A: 0.300  C: 0.206  G: 0.198  T: 0.296
+Gamma shape alpha: 0.204
+Parameters optimization took 2 rounds (0.011 sec)
+BEST SCORE FOUND : -22362.843
+
+Testing tree branches by aBayes parametric test...
+0.008 sec.
+Total tree length: 14.704
+
+Total number of iterations: 102
+CPU time used for tree search: 4.246 sec (0h:0m:4s)
+Wall-clock time used for tree search: 4.268 sec (0h:0m:4s)
+Total CPU time used: 27.409 sec (0h:0m:27s)
+Total wall-clock time used: 26.187 sec (0h:0m:26s)
+
+Analysis results written to: 
+  IQ-TREE report:                /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_low/replicate_09/estimated_gene_trees/L1600/hky_g4/locus_0040.iqtree
+  Maximum-likelihood tree:       /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_low/replicate_09/estimated_gene_trees/L1600/hky_g4/locus_0040.treefile
+  Likelihood distances:          /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_low/replicate_09/estimated_gene_trees/L1600/hky_g4/locus_0040.mldist
+  Screen log file:               /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_low/replicate_09/estimated_gene_trees/L1600/hky_g4/locus_0040.log
+
+Date and Time: Fri Sep 11 19:43:34 2026
