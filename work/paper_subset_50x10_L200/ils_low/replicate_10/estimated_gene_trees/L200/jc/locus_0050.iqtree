@@ -1,0 +1,138 @@
+IQ-TREE 2.4.0 built Feb 12 2025
+
+Input file name: /home/mis/CSE6406-project/work/paper_subset_50x10_L200/ils_low/replicate_10/alignments/L200/locus_0050.phy
+Type of analysis: tree reconstruction
+Random seed number: 7406051
+
+REFERENCES
+----------
+
+To cite IQ-TREE please use:
+
+Bui Quang Minh, Heiko A. Schmidt, Olga Chernomor, Dominik Schrempf,
+Michael D. Woodhams, Arndt von Haeseler, and Robert Lanfear (2020)
+IQ-TREE 2: New models and efficient methods for phylogenetic inference
+in the genomic era. Mol. Biol. Evol., in press.
+https://doi.org/10.1093/molbev/msaa015
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 21 sequences with 200 nucleotide sites
+Number of constant sites: 134 (= 67% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 134 (= 67% of all sites)
+Number of parsimony informative sites: 45
+Number of distinct site patterns: 69
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: JC
+
+Rate parameter R:
+
+  A-C: 1.0000
+  A-G: 1.0000
+  A-T: 1.0000
+  C-G: 1.0000
+  C-T: 1.0000
+  G-T: 1.0000
+
+State frequencies: (equal frequencies)
+
+Rate matrix Q:
+
+  A        -1    0.3333    0.3333    0.3333
+  C    0.3333        -1    0.3333    0.3333
+  G    0.3333    0.3333        -1    0.3333
+  T    0.3333    0.3333    0.3333        -1
+
+Model of rate heterogeneity: Uniform
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -1155.5858 (s.e. 86.7638)
+Unconstrained log-likelihood (without tree): -585.2240
+Number of free parameters (#branches + #model parameters): 39
+Akaike information criterion (AIC) score: 2389.1715
+Corrected Akaike information criterion (AICc) score: 2408.6715
+Bayesian information criterion (BIC) score: 2517.8059
+
+Total tree length (sum of branch lengths): 0.8326
+Sum of internal branch lengths: 0.2794 (33.5546% of tree length)
+
+WARNING: 5 near-zero internal branches (<0.0050) should be treated with caution
+         Such branches are denoted by '**' in the figure below
+
+NOTE: Tree is UNROOTED although outgroup taxon '0_0_0' is drawn at root
+
++-------------------------------------------------------0_0_0
+|
+|            +----20_0_0
++------------| (/0.992)
+|            +-----------19_0_0
+|
+|                                                          +--------5_0_0
+|                                                       +**| (/0.333)
+|                                                       |  +-----12_0_0
+|                                +----------------------| (/1)
+|                                |                      +---6_0_0
+|                             +**| (/0.333)
+|                             |  |          +------------17_0_0
+|                             |  |  +-------| (/0.999)
+|                             |  |  |       |  +--4_0_0
+|                             |  |  |       +--| (/0.848)
+|                             |  |  |          +---9_0_0
+|                             |  +--| (/0.82)
+|                             |     |            +-------1_0_0
+|                             |     +------------| (/1)
+|                             |                  +--16_0_0
+|                          +**| (/0.763)
+|                          |  |      +-------------------2_0_0
+|                          |  +------| (/0.994)
+|                          |         +-------------------10_0_0
+|                       +**| (/0.768)
+|                       |  |      +----------15_0_0
+|                       |  |   +--| (/0.878)
+|                       |  |   |  +---8_0_0
+|                       |  +---| (/1)
+|                       |      |     +-----------------18_0_0
+|                       |      |  +--| (/0.891)
+|                       |      |  |  +--11_0_0
+|                       |      +--| (/0.951)
+|                       |         +--14_0_0
+|                    +**| (/0.481)
+|                    |  |            +------3_0_0
+|                    |  +------------| (/1)
+|                    |               +------------7_0_0
++--------------------| (/1)
+                     +-----------------13_0_0
+
+Tree in newick format:
+
+(0_0_0:0.1271327900,(20_0_0:0.0130951338,19_0_0:0.0278322457)/0.992:0.0311706692,(((((((5_0_0:0.0202740522,12_0_0:0.0151539335)/0.333:0.0000010000,6_0_0:0.0100672652)/1:0.0517535094,((17_0_0:0.0298838435,(4_0_0:0.0050215079,9_0_0:0.0100968538)/0.848:0.0070344252)/0.999:0.0188183129,(1_0_0:0.0186334264,16_0_0:0.0074487018)/1:0.0300734764)/0.82:0.0056016591)/0.333:0.0000010000,(2_0_0:0.0459384697,10_0_0:0.0459348746)/0.994:0.0172102946)/0.763:0.0049805696,((15_0_0:0.0255416113,8_0_0:0.0101284236)/0.878:0.0050000478,((18_0_0:0.0412409721,11_0_0:0.0050357953)/0.891:0.0050357116,14_0_0:0.0050355784)/0.951:0.0050245563)/1:0.0101615892)/0.768:0.0049468997,(3_0_0:0.0179250932,7_0_0:0.0296017865)/1:0.0296570266)/0.481:0.0043679174,13_0_0:0.0421971395)/1:0.0485344172);
+
+ALISIM COMMAND
+--------------
+To simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis, you can use the following command:
+
+--alisim simulated_MSA -t /home/mis/CSE6406-project/work/paper_subset_50x10_L200/ils_low/replicate_10/estimated_gene_trees/L200/jc/locus_0050.treefile -m "JC" --length 200
+
+To mimic the alignment used to produce this analysis, i.e. simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis *and* copying the same gap positions as the original alignment, you can use the following command:
+
+iqtree -s /home/mis/CSE6406-project/work/paper_subset_50x10_L200/ils_low/replicate_10/alignments/L200/locus_0050.phy --alisim mimicked_MSA
+
+To simulate any number of alignments in either of the two commandlines above, use the --num-alignments options, for example mimic 100 alignments you would use the command line:
+
+iqtree -s /home/mis/CSE6406-project/work/paper_subset_50x10_L200/ils_low/replicate_10/alignments/L200/locus_0050.phy --alisim mimicked_MSA --num-alignments 100
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Sat Sep 12 21:39:07 2026
+Total CPU time used: 0.577132 seconds (0h:0m:0s)
+Total wall-clock time used: 0.650212 seconds (0h:0m:0s)
+

@@ -1,0 +1,140 @@
+IQ-TREE 2.4.0 built Feb 12 2025
+
+Input file name: /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_high/replicate_06/alignments/L1600/locus_0007.phy
+Type of analysis: tree reconstruction
+Random seed number: 7006008
+
+REFERENCES
+----------
+
+To cite IQ-TREE please use:
+
+Bui Quang Minh, Heiko A. Schmidt, Olga Chernomor, Dominik Schrempf,
+Michael D. Woodhams, Arndt von Haeseler, and Robert Lanfear (2020)
+IQ-TREE 2: New models and efficient methods for phylogenetic inference
+in the genomic era. Mol. Biol. Evol., in press.
+https://doi.org/10.1093/molbev/msaa015
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 21 sequences with 1600 nucleotide sites
+Number of constant sites: 924 (= 57.75% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 924 (= 57.75% of all sites)
+Number of parsimony informative sites: 476
+Number of distinct site patterns: 627
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: GTR+F
+
+Rate parameter R:
+
+  A-C: 1.4145
+  A-G: 1.7443
+  A-T: 1.0389
+  C-G: 1.2958
+  C-T: 1.9805
+  G-T: 1.0000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.2946
+  pi(C) = 0.1731
+  pi(G) = 0.2018
+  pi(T) = 0.3305
+
+Rate matrix Q:
+
+  A    -0.936    0.2437    0.3505    0.3418
+  C    0.4148    -1.327    0.2604    0.6516
+  G    0.5115    0.2233    -1.064     0.329
+  T    0.3047    0.3413    0.2009   -0.8469
+
+Model of rate heterogeneity: Uniform
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -15221.7552 (s.e. 394.7063)
+Unconstrained log-likelihood (without tree): -6651.0501
+Number of free parameters (#branches + #model parameters): 47
+Akaike information criterion (AIC) score: 30537.5104
+Corrected Akaike information criterion (AICc) score: 30540.4176
+Bayesian information criterion (BIC) score: 30790.2651
+
+Total tree length (sum of branch lengths): 1.8208
+Sum of internal branch lengths: 0.3817 (20.9649% of tree length)
+
+NOTE: Tree is UNROOTED although outgroup taxon '9_0_0' is drawn at root
+
++---------------------------------------9_0_0
+|
+|                             +-------------------15_0_0
+|                          +--| (/1)
+|                          |  +------------------13_0_0
+|                       +--| (/0.967)
+|                       |  |   +------------------19_0_0
+|                       |  +---| (/1)
+|                       |      +--------------------17_0_0
+|         +-------------| (/1)
+|         |             |  +---------------------16_0_0
+|         |             +--| (/1)
+|         |                +--------------------18_0_0
++---------| (/1)
+|         |                   +-------------------11_0_0
+|         |              +----| (/1)
+|         |              |    |      +----------------12_0_0
+|         |              |    +------| (/1)
+|         |              |           +-------------------14_0_0
+|         |          +---| (/1)
+|         |          |   |                +------------3_0_0
+|         |          |   |  +-------------| (/1)
+|         |          |   |  |             +-----------2_0_0
+|         |          |   +--| (/0.998)
+|         |          |      |  +----------------------5_0_0
+|         |          |      +--| (/0.998)
+|         |          |         |       +------------------8_0_0
+|         |          |         |    +--| (/1)
+|         |          |         |    |  +------------------6_0_0
+|         |          |         +----| (/1)
+|         |          |              |         +---------7_0_0
+|         |          |              +---------| (/1)
+|         |          |                        |  +-------4_0_0
+|         |          |                        +--| (/1)
+|         |          |                           +--------1_0_0
+|         +----------| (/1)
+|                    |       +----------------------10_0_0
+|                    +-------| (/1)
+|                            +----------------------------20_0_0
+|
++--------------------------------------------0_0_0
+
+Tree in newick format:
+
+(9_0_0:0.1320117960,((((15_0_0:0.0679717192,13_0_0:0.0630083117)/1:0.0108118336,(19_0_0:0.0651842090,17_0_0:0.0689224082)/1:0.0145922296)/0.967:0.0059944071,(16_0_0:0.0725966644,18_0_0:0.0699493272)/1:0.0124518973)/1:0.0467430528,(((11_0_0:0.0670494356,(12_0_0:0.0585542952,14_0_0:0.0666685924)/1:0.0259908960)/1:0.0166097482,((3_0_0:0.0442916681,2_0_0:0.0421803194)/1:0.0481104274,(5_0_0:0.0752804045,((8_0_0:0.0630244964,6_0_0:0.0641353584)/1:0.0105535809,(7_0_0:0.0344877354,(4_0_0:0.0291793906,1_0_0:0.0305306564)/1:0.0070587149)/1:0.0345160975)/1:0.0184047307)/0.998:0.0089180225)/0.998:0.0062233286)/1:0.0158403521,(10_0_0:0.0772021573,20_0_0:0.0966455152)/1:0.0279448190)/1:0.0367185777)/1:0.0342507642,0_0_0:0.1502151697);
+
+ALISIM COMMAND
+--------------
+To simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis, you can use the following command:
+
+--alisim simulated_MSA -t /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_high/replicate_06/estimated_gene_trees/L1600/gtr/locus_0007.treefile -m "GTR{1.41449,1.74435,1.03892,1.29582,1.98054}+F{0.294583,0.173095,0.201845,0.330476}" --length 1600
+
+To mimic the alignment used to produce this analysis, i.e. simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis *and* copying the same gap positions as the original alignment, you can use the following command:
+
+iqtree -s /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_high/replicate_06/alignments/L1600/locus_0007.phy --alisim mimicked_MSA
+
+To simulate any number of alignments in either of the two commandlines above, use the --num-alignments options, for example mimic 100 alignments you would use the command line:
+
+iqtree -s /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_high/replicate_06/alignments/L1600/locus_0007.phy --alisim mimicked_MSA --num-alignments 100
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Sat Sep 12 11:47:15 2026
+Total CPU time used: 28.5513 seconds (0h:0m:28s)
+Total wall-clock time used: 35.0966 seconds (0h:0m:35s)
+

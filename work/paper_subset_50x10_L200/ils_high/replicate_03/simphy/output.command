@@ -1,0 +1,1 @@
+/home/mis/SimPhy/bin/simphy -rs 1 -rl f:50 -rg 1 -sp f:1000000 -su e:10000000 -si f:1 -cs 6406004 -o /tmp/cse6406_simphy_t0b39js2/output -ot 0 -v 0 -sb f:0.0000001 -sl f:20 -st f:2500000 -so f:1 

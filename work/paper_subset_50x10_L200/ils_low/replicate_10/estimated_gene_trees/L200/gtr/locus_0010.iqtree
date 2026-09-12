@@ -1,0 +1,143 @@
+IQ-TREE 2.4.0 built Feb 12 2025
+
+Input file name: /home/mis/CSE6406-project/work/paper_subset_50x10_L200/ils_low/replicate_10/alignments/L200/locus_0010.phy
+Type of analysis: tree reconstruction
+Random seed number: 7406011
+
+REFERENCES
+----------
+
+To cite IQ-TREE please use:
+
+Bui Quang Minh, Heiko A. Schmidt, Olga Chernomor, Dominik Schrempf,
+Michael D. Woodhams, Arndt von Haeseler, and Robert Lanfear (2020)
+IQ-TREE 2: New models and efficient methods for phylogenetic inference
+in the genomic era. Mol. Biol. Evol., in press.
+https://doi.org/10.1093/molbev/msaa015
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 21 sequences with 200 nucleotide sites
+Number of constant sites: 129 (= 64.5% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 129 (= 64.5% of all sites)
+Number of parsimony informative sites: 51
+Number of distinct site patterns: 74
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: GTR+F
+
+Rate parameter R:
+
+  A-C: 1.3765
+  A-G: 2.5024
+  A-T: 1.3284
+  C-G: 1.7137
+  C-T: 2.5939
+  G-T: 1.0000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.3114
+  pi(C) = 0.1952
+  pi(G) = 0.1876
+  pi(T) = 0.3057
+
+Rate matrix Q:
+
+  A   -0.9063    0.2128    0.3718    0.3216
+  C    0.3395    -1.222    0.2546     0.628
+  G    0.6172     0.265    -1.124    0.2421
+  T    0.3276    0.4011    0.1486   -0.8773
+
+Model of rate heterogeneity: Uniform
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -1149.6394 (s.e. 84.0622)
+Unconstrained log-likelihood (without tree): -606.8993
+Number of free parameters (#branches + #model parameters): 47
+Akaike information criterion (AIC) score: 2393.2789
+Corrected Akaike information criterion (AICc) score: 2422.9631
+Bayesian information criterion (BIC) score: 2548.2998
+
+Total tree length (sum of branch lengths): 0.8502
+Sum of internal branch lengths: 0.3293 (38.7276% of tree length)
+
+WARNING: 3 near-zero internal branches (<0.0050) should be treated with caution
+         Such branches are denoted by '**' in the figure below
+
+NOTE: Tree is UNROOTED although outgroup taxon '0_0_0' is drawn at root
+
++-----------------------------------------------------------0_0_0
+|
+|          +-----------17_0_0
++----------| (/0.999)
+|          |       +--4_0_0
+|          +-------| (/1)
+|                  +---9_0_0
+|
+|                            +--6_0_0
+|                         +--| (/0.965)
+|                         |  +---5_0_0
+|         +---------------| (/1)
+|         |               +**12_0_0
+|   +-----| (/0.924)
+|   |     |                          +----------20_0_0
+|   |     +--------------------------| (/1)
+|   |                                +--------------------19_0_0
++---| (/0.517)
+    |  +------------------------13_0_0
+    +--| (/0.758)
+       |         +-----7_0_0
+       |     +---| (/0.882)
+       |     |   +-------3_0_0
+       |  +**| (/0.335)
+       |  |  +----------------2_0_0
+       +--| (/0.607)
+          |     +-------10_0_0
+          |  +**| (/0.695)
+          |  |  |                           +-----14_0_0
+          |  |  |            +--------------| (/1)
+          |  |  |            |              +**11_0_0
+          |  |  |         +**| (/0.635)
+          |  |  |         |  +-------18_0_0
+          |  |  +---------| (/1)
+          |  |            |     +---15_0_0
+          |  |            +-----| (/1)
+          |  |                  +-----8_0_0
+          +--| (/0.83)
+             |         +---16_0_0
+             +---------| (/1)
+                       +**1_0_0
+
+Tree in newick format:
+
+(0_0_0:0.1443635846,(17_0_0:0.0308695261,(4_0_0:0.0050138302,9_0_0:0.0101200017)/1:0.0205452009)/0.999:0.0273555312,((((6_0_0:0.0050129348,5_0_0:0.0100543420)/0.965:0.0050346488,12_0_0:0.0000010000)/1:0.0391115324,(20_0_0:0.0287082115,19_0_0:0.0506139075)/1:0.0663433079)/0.924:0.0147383731,(13_0_0:0.0621603098,(((7_0_0:0.0154193321,3_0_0:0.0205052014)/0.882:0.0097341610,2_0_0:0.0410251060)/0.335:0.0006417855,((10_0_0:0.0204899839,(((14_0_0:0.0151971231,11_0_0:0.0000020753)/1:0.0361422846,18_0_0:0.0207318572)/0.635:0.0046765253,(15_0_0:0.0101578347,8_0_0:0.0152721916)/1:0.0156039505)/1:0.0261762642)/0.695:0.0048239064,(16_0_0:0.0102543040,1_0_0:0.0049670529)/1:0.0260533835)/0.83:0.0052318600)/0.607:0.0077829777)/0.758:0.0076812930)/0.517:0.0115861209);
+
+ALISIM COMMAND
+--------------
+To simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis, you can use the following command:
+
+--alisim simulated_MSA -t /home/mis/CSE6406-project/work/paper_subset_50x10_L200/ils_low/replicate_10/estimated_gene_trees/L200/gtr/locus_0010.treefile -m "GTR{1.3765,2.50243,1.32835,1.71368,2.5939}+F{0.311429,0.195238,0.187619,0.305714}" --length 200
+
+To mimic the alignment used to produce this analysis, i.e. simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis *and* copying the same gap positions as the original alignment, you can use the following command:
+
+iqtree -s /home/mis/CSE6406-project/work/paper_subset_50x10_L200/ils_low/replicate_10/alignments/L200/locus_0010.phy --alisim mimicked_MSA
+
+To simulate any number of alignments in either of the two commandlines above, use the --num-alignments options, for example mimic 100 alignments you would use the command line:
+
+iqtree -s /home/mis/CSE6406-project/work/paper_subset_50x10_L200/ils_low/replicate_10/alignments/L200/locus_0010.phy --alisim mimicked_MSA --num-alignments 100
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Sat Sep 12 21:38:40 2026
+Total CPU time used: 1.10691 seconds (0h:0m:1s)
+Total wall-clock time used: 1.20527 seconds (0h:0m:1s)
+

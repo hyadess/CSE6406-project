@@ -1,0 +1,140 @@
+IQ-TREE 2.4.0 built Feb 12 2025
+
+Input file name: /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_high/replicate_02/alignments/L1600/locus_0010.phy
+Type of analysis: tree reconstruction
+Random seed number: 6606011
+
+REFERENCES
+----------
+
+To cite IQ-TREE please use:
+
+Bui Quang Minh, Heiko A. Schmidt, Olga Chernomor, Dominik Schrempf,
+Michael D. Woodhams, Arndt von Haeseler, and Robert Lanfear (2020)
+IQ-TREE 2: New models and efficient methods for phylogenetic inference
+in the genomic era. Mol. Biol. Evol., in press.
+https://doi.org/10.1093/molbev/msaa015
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 21 sequences with 1600 nucleotide sites
+Number of constant sites: 566 (= 35.375% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 566 (= 35.375% of all sites)
+Number of parsimony informative sites: 911
+Number of distinct site patterns: 1000
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: GTR+F
+
+Rate parameter R:
+
+  A-C: 1.2362
+  A-G: 1.4947
+  A-T: 1.0866
+  C-G: 1.0901
+  C-T: 1.3537
+  G-T: 1.0000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.2951
+  pi(C) = 0.202
+  pi(G) = 0.1965
+  pi(T) = 0.3064
+
+Rate matrix Q:
+
+  A   -0.9827      0.28    0.3293    0.3734
+  C    0.4091    -1.114    0.2402    0.4652
+  G    0.4947    0.2469    -1.085    0.3436
+  T    0.3596    0.3066    0.2203   -0.8866
+
+Model of rate heterogeneity: Uniform
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -29450.4139 (s.e. 475.9126)
+Unconstrained log-likelihood (without tree): -8923.6480
+Number of free parameters (#branches + #model parameters): 47
+Akaike information criterion (AIC) score: 58994.8277
+Corrected Akaike information criterion (AICc) score: 58997.7349
+Bayesian information criterion (BIC) score: 59247.5824
+
+Total tree length (sum of branch lengths): 5.4805
+Sum of internal branch lengths: 1.3744 (25.0779% of tree length)
+
+NOTE: Tree is UNROOTED although outgroup taxon '0_0_0' is drawn at root
+
++--------------------------0_0_0
+|
+|                           +-----------------------5_0_0
+|                        +--| (/0.895)
+|                        |  |   +--------------------11_0_0
+|                        |  +---| (/0.995)
+|                        |      +----------------------9_0_0
+|                     +--| (/0.999)
+|                     |  |                +-------------19_0_0
+|                     |  |          +-----| (/1)
+|                     |  |          |     +-----------10_0_0
+|                     |  +----------| (/1)
+|                     |             +--------------7_0_0
+|                  +--| (/0.97)
+|                  |  |      +---------------------1_0_0
+|                  |  |  +---| (/0.901)
+|                  |  |  |   +--------------------8_0_0
+|                  |  +--| (/0.977)
+|                  |     |        +-----------------13_0_0
+|                  |     +--------| (/1)
+|                  |              +----------------16_0_0
+|           +------| (/1)
+|           |      |    +-------------------4_0_0
+|           |      +----| (/1)
+|           |           +-------------------2_0_0
++-----------| (/1)
+|           |    +----------------3_0_0
+|           +----| (/0.999)
+|                +-----------------6_0_0
+|
+|                                  +------------18_0_0
+|                         +--------| (/1)
+|                         |        +------------15_0_0
+|                 +-------| (/1)
+|                 |       +-----------------14_0_0
++-----------------| (/1)
+                  |          +----------------20_0_0
+                  |    +-----| (/1)
+                  |    |     +---------------17_0_0
+                  +----| (/1)
+                       +-----------------12_0_0
+
+Tree in newick format:
+
+(0_0_0:0.2905608652,(((((5_0_0:0.2574494112,(11_0_0:0.2256817242,9_0_0:0.2407272731)/0.995:0.0502220662)/0.895:0.0393829876,((19_0_0:0.1483208422,10_0_0:0.1329104076)/1:0.0706201881,7_0_0:0.1642432759)/1:0.1224606893)/0.999:0.0398737197,((1_0_0:0.2318082764,8_0_0:0.2209595159)/0.901:0.0472513226,(13_0_0:0.1913577779,16_0_0:0.1869326323)/1:0.0964750366)/0.977:0.0355686338)/0.97:0.0385740632,(4_0_0:0.2146244517,2_0_0:0.2148306127)/1:0.0554511546)/1:0.0733194087,(3_0_0:0.1824962020,6_0_0:0.1905641122)/0.999:0.0620604161)/1:0.1307433495,(((18_0_0:0.1390916291,15_0_0:0.1372918126)/1:0.1025437058,14_0_0:0.1883334010)/1:0.0864664806,((20_0_0:0.1834155480,17_0_0:0.1745913250)/1:0.0685530106,12_0_0:0.1899388954)/1:0.0603892545)/1:0.1944474412);
+
+ALISIM COMMAND
+--------------
+To simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis, you can use the following command:
+
+--alisim simulated_MSA -t /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_high/replicate_02/estimated_gene_trees/L1600/gtr/locus_0010.treefile -m "GTR{1.23617,1.49469,1.08659,1.09008,1.3537}+F{0.295119,0.201964,0.196488,0.306429}" --length 1600
+
+To mimic the alignment used to produce this analysis, i.e. simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis *and* copying the same gap positions as the original alignment, you can use the following command:
+
+iqtree -s /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_high/replicate_02/alignments/L1600/locus_0010.phy --alisim mimicked_MSA
+
+To simulate any number of alignments in either of the two commandlines above, use the --num-alignments options, for example mimic 100 alignments you would use the command line:
+
+iqtree -s /Users/fahim/CSE6406-project/work/paper_subset_50x10_L1600/ils_high/replicate_02/alignments/L1600/locus_0010.phy --alisim mimicked_MSA --num-alignments 100
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Sat Sep 12 03:21:43 2026
+Total CPU time used: 26.2567 seconds (0h:0m:26s)
+Total wall-clock time used: 28.8375 seconds (0h:0m:28s)
+
