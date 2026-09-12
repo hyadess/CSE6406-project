@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from cse6406.trees.newick import informative_splits
 
 
-@dataclass(frozen=True)
+# ``slots`` keeps the per-branch record small: the production design holds
+# roughly 14 million of these in memory at once for the Stage 1 tables.
+@dataclass(frozen=True, slots=True)
 class BranchObservation:
     condition: str
     replicate: int

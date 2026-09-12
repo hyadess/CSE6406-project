@@ -25,7 +25,17 @@ def wilson(successes: int, total: int, z: float = 1.96) -> tuple[float, float]:
 class CalibrationAnalyzer:
     """Produce Stage 1 branch, calibration, and high-support error tables."""
 
-    def analyze(self, observations: list[BranchObservation]):
+    def analyze(
+        self, observations: list[BranchObservation], *,
+        materialize_branches: bool = True,
+    ):
+        """Return (branches, calibration, summary, replicate_summary).
+
+        ``materialize_branches=False`` returns an empty branch table so a
+        caller that already streamed those rows to disk does not pay for a
+        second full copy of them in memory; the three aggregate tables are
+        unaffected.
+        """
         supported = [row for row in observations if row.support is not None]
         calibration_groups = defaultdict(list)
         condition_groups = defaultdict(list)
@@ -53,7 +63,8 @@ class CalibrationAnalyzer:
 
         summary = self._summaries(condition_groups, pooled=True)
         replicate_summary = self._summaries(replicate_groups, pooled=False)
-        return [asdict(row) for row in observations], calibration, summary, replicate_summary
+        branches = [asdict(row) for row in observations] if materialize_branches else []
+        return branches, calibration, summary, replicate_summary
 
     @staticmethod
     def _pooled_key(row: BranchObservation) -> str:
