@@ -1,0 +1,143 @@
+IQ-TREE 2.4.0 built Feb 12 2025
+
+Input file name: /home/mis/CSE6406-project/work/paper_subset_50x10_L800/ils_high/replicate_04/alignments/L800/locus_0043.phy
+Type of analysis: tree reconstruction
+Random seed number: 6806044
+
+REFERENCES
+----------
+
+To cite IQ-TREE please use:
+
+Bui Quang Minh, Heiko A. Schmidt, Olga Chernomor, Dominik Schrempf,
+Michael D. Woodhams, Arndt von Haeseler, and Robert Lanfear (2020)
+IQ-TREE 2: New models and efficient methods for phylogenetic inference
+in the genomic era. Mol. Biol. Evol., in press.
+https://doi.org/10.1093/molbev/msaa015
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 21 sequences with 800 nucleotide sites
+Number of constant sites: 536 (= 67% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 536 (= 67% of all sites)
+Number of parsimony informative sites: 178
+Number of distinct site patterns: 253
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: HKY+F
+
+Rate parameter R:
+
+  A-C: 1.0000
+  A-G: 1.8923
+  A-T: 1.0000
+  C-G: 1.0000
+  C-T: 1.8923
+  G-T: 1.0000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.3079
+  pi(C) = 0.1986
+  pi(G) = 0.2027
+  pi(T) = 0.2908
+
+Rate matrix Q:
+
+  A   -0.9146     0.208    0.4019    0.3046
+  C    0.3226    -1.111    0.2124    0.5764
+  G    0.6104     0.208    -1.123    0.3046
+  T    0.3226    0.3937    0.2124   -0.9286
+
+Model of rate heterogeneity: Uniform
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -5063.2409 (s.e. 200.3905)
+Unconstrained log-likelihood (without tree): -2685.6607
+Number of free parameters (#branches + #model parameters): 43
+Akaike information criterion (AIC) score: 10212.4818
+Corrected Akaike information criterion (AICc) score: 10217.4871
+Bayesian information criterion (BIC) score: 10413.9201
+
+Total tree length (sum of branch lengths): 0.9659
+Sum of internal branch lengths: 0.1777 (18.4007% of tree length)
+
+WARNING: 3 near-zero internal branches (<0.0013) should be treated with caution
+         Such branches are denoted by '**' in the figure below
+
+NOTE: Tree is UNROOTED although outgroup taxon '2_0_0' is drawn at root
+
++------------------------------------2_0_0
+|
+|                             +----------14_0_0
+|                    +--------| (/1)
+|                    |        +--------5_0_0
+|                +---| (/1)
+|                |   +------------------------7_0_0
+|             +**| (/0.333)
+|             |  |        +-----------------15_0_0
+|             |  |     +--| (/0.579)
+|             |  |     |  +------------------------18_0_0
+|             |  |  +--| (/0.501)
+|             |  |  |  +----------------------------20_0_0
+|             |  +--| (/1)
+|             |     |    +----------------------1_0_0
+|             |     +----| (/1)
+|             |          |         +---------------4_0_0
+|             |          +---------| (/1)
+|             |                    |     +-----11_0_0
+|             |                    +-----| (/1)
+|             |                          +----16_0_0
+|          +--| (/1)
+|          |  |      +-------------------8_0_0
+|          |  +------| (/1)
+|          |         |  +-------------------------3_0_0
+|          |         +**| (/0.368)
+|          |            |   +-----------------------12_0_0
+|          |            +---| (/0.999)
+|          |                |       +-----------13_0_0
+|          |                +-------| (/1)
+|          |                        +--------------6_0_0
++----------| (/1)
+|          |                      +-------17_0_0
+|          |     +----------------| (/1)
+|          |     |                +---19_0_0
+|          |  +**| (/0.389)
+|          |  |  +-----------------------------10_0_0
+|          +--| (/1)
+|             +---------------------9_0_0
+|
++-----------------------------------------------------------0_0_0
+
+Tree in newick format:
+
+(2_0_0:0.0672396810,(((((14_0_0:0.0217272023,5_0_0:0.0165725025)/1:0.0179805166,7_0_0:0.0468422116)/1:0.0073868644,(((15_0_0:0.0337093024,18_0_0:0.0468312297)/0.579:0.0024367471,20_0_0:0.0543821536)/0.501:0.0012652613,(1_0_0:0.0424803569,(4_0_0:0.0297722195,(11_0_0:0.0110331256,16_0_0:0.0098896687)/1:0.0123345221)/1:0.0196036737)/1:0.0096810665)/1:0.0045308232)/0.333:0.0000010000,(8_0_0:0.0366813974,(3_0_0:0.0480410140,(12_0_0:0.0437024664,(13_0_0:0.0218675288,6_0_0:0.0278499435)/1:0.0148325498)/0.999:0.0075381120)/0.368:0.0006403317)/1:0.0133345446)/1:0.0051372500,(((17_0_0:0.0151547796,19_0_0:0.0078029992)/1:0.0315365330,10_0_0:0.0560003449)/0.389:0.0010865746,9_0_0:0.0416702933)/1:0.0071764578)/1:0.0212340788,0_0_0:0.1089373517);
+
+ALISIM COMMAND
+--------------
+To simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis, you can use the following command:
+
+--alisim simulated_MSA -t /home/mis/CSE6406-project/work/paper_subset_50x10_L800/ils_high/replicate_04/estimated_gene_trees/L800/hky/locus_0043.treefile -m "HKY{1.89233}+F{0.307917,0.198571,0.202738,0.290774}" --length 800
+
+To mimic the alignment used to produce this analysis, i.e. simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis *and* copying the same gap positions as the original alignment, you can use the following command:
+
+iqtree -s /home/mis/CSE6406-project/work/paper_subset_50x10_L800/ils_high/replicate_04/alignments/L800/locus_0043.phy --alisim mimicked_MSA
+
+To simulate any number of alignments in either of the two commandlines above, use the --num-alignments options, for example mimic 100 alignments you would use the command line:
+
+iqtree -s /home/mis/CSE6406-project/work/paper_subset_50x10_L800/ils_high/replicate_04/alignments/L800/locus_0043.phy --alisim mimicked_MSA --num-alignments 100
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Sat Sep 12 19:57:34 2026
+Total CPU time used: 1.18 seconds (0h:0m:1s)
+Total wall-clock time used: 1.25007 seconds (0h:0m:1s)
+

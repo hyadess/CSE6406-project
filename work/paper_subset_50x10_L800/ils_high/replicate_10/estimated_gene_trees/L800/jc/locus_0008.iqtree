@@ -1,0 +1,135 @@
+IQ-TREE 2.4.0 built Feb 12 2025
+
+Input file name: /home/mis/CSE6406-project/work/paper_subset_50x10_L800/ils_high/replicate_10/alignments/L800/locus_0008.phy
+Type of analysis: tree reconstruction
+Random seed number: 7406009
+
+REFERENCES
+----------
+
+To cite IQ-TREE please use:
+
+Bui Quang Minh, Heiko A. Schmidt, Olga Chernomor, Dominik Schrempf,
+Michael D. Woodhams, Arndt von Haeseler, and Robert Lanfear (2020)
+IQ-TREE 2: New models and efficient methods for phylogenetic inference
+in the genomic era. Mol. Biol. Evol., in press.
+https://doi.org/10.1093/molbev/msaa015
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 21 sequences with 800 nucleotide sites
+Number of constant sites: 523 (= 65.375% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 523 (= 65.375% of all sites)
+Number of parsimony informative sites: 206
+Number of distinct site patterns: 261
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: JC
+
+Rate parameter R:
+
+  A-C: 1.0000
+  A-G: 1.0000
+  A-T: 1.0000
+  C-G: 1.0000
+  C-T: 1.0000
+  G-T: 1.0000
+
+State frequencies: (equal frequencies)
+
+Rate matrix Q:
+
+  A        -1    0.3333    0.3333    0.3333
+  C    0.3333        -1    0.3333    0.3333
+  G    0.3333    0.3333        -1    0.3333
+  T    0.3333    0.3333    0.3333        -1
+
+Model of rate heterogeneity: Uniform
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -5352.0817 (s.e. 209.0944)
+Unconstrained log-likelihood (without tree): -2757.7545
+Number of free parameters (#branches + #model parameters): 39
+Akaike information criterion (AIC) score: 10782.1635
+Corrected Akaike information criterion (AICc) score: 10786.2687
+Bayesian information criterion (BIC) score: 10964.8633
+
+Total tree length (sum of branch lengths): 1.0236
+Sum of internal branch lengths: 0.3518 (34.3671% of tree length)
+
+NOTE: Tree is UNROOTED although outgroup taxon '5_0_0' is drawn at root
+
++---------5_0_0
+|
+|      +----12_0_0
++------| (/1)
+|      +--6_0_0
+|
+|                +------4_0_0
+|             +--| (/1)
+|             |  +-------17_0_0
+|          +--| (/1)
+|          |  +---------9_0_0
+|       +--| (/0.55)
+|       |  |                                 +------20_0_0
+|       |  |              +------------------| (/1)
+|       |  |              |                  +-----19_0_0
+|       |  +--------------| (/1)
+|       |                 +------------------------------------0_0_0
+|    +--| (/0.494)
+|    |  |       +-----------8_0_0
+|    |  |  +----| (/1)
+|    |  |  |    |  +------------10_0_0
+|    |  |  |    +--| (/0.924)
+|    |  |  |       |      +---18_0_0
+|    |  |  |       +------| (/1)
+|    |  |  |              +----14_0_0
+|    |  +--| (/1)
+|    |     |         +----15_0_0
+|    |     |  +------| (/1)
+|    |     |  |      +-----11_0_0
+|    |     +--| (/0.999)
+|    |        |             +----16_0_0
+|    |        |     +-------| (/1)
+|    |        |     |       +--1_0_0
+|    |        |  +--| (/0.999)
+|    |        |  |  +-------2_0_0
+|    |        +--| (/0.614)
+|    |           +---------13_0_0
++----| (/1)
+     |         +---------3_0_0
+     +---------| (/1)
+               +----------7_0_0
+
+Tree in newick format:
+
+(5_0_0:0.0358119792,(12_0_0:0.0195236954,6_0_0:0.0086119814)/1:0.0271116291,(((((4_0_0:0.0262390081,17_0_0:0.0305984142)/1:0.0099953879,9_0_0:0.0359755779)/1:0.0123643929,((20_0_0:0.0250466162,19_0_0:0.0216784040)/1:0.0682516273,0_0_0:0.1280984052)/1:0.0520539631)/0.55:0.0049559971,((8_0_0:0.0415429031,(10_0_0:0.0454429421,(18_0_0:0.0159940376,14_0_0:0.0203007449)/1:0.0259288824)/0.924:0.0044969372)/1:0.0190269372,((15_0_0:0.0199449434,11_0_0:0.0234994194)/1:0.0244559033,(((16_0_0:0.0196793192,1_0_0:0.0113097460)/1:0.0284248646,2_0_0:0.0306328306)/0.999:0.0066842226,13_0_0:0.0361278821)/0.614:0.0013610504)/0.999:0.0039911971)/1:0.0082906550)/0.494:0.0014892351,(3_0_0:0.0358178767,7_0_0:0.0399443062)/1:0.0344584344)/1:0.0184416546);
+
+ALISIM COMMAND
+--------------
+To simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis, you can use the following command:
+
+--alisim simulated_MSA -t /home/mis/CSE6406-project/work/paper_subset_50x10_L800/ils_high/replicate_10/estimated_gene_trees/L800/jc/locus_0008.treefile -m "JC" --length 800
+
+To mimic the alignment used to produce this analysis, i.e. simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis *and* copying the same gap positions as the original alignment, you can use the following command:
+
+iqtree -s /home/mis/CSE6406-project/work/paper_subset_50x10_L800/ils_high/replicate_10/alignments/L800/locus_0008.phy --alisim mimicked_MSA
+
+To simulate any number of alignments in either of the two commandlines above, use the --num-alignments options, for example mimic 100 alignments you would use the command line:
+
+iqtree -s /home/mis/CSE6406-project/work/paper_subset_50x10_L800/ils_high/replicate_10/alignments/L800/locus_0008.phy --alisim mimicked_MSA --num-alignments 100
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Sat Sep 12 20:08:41 2026
+Total CPU time used: 1.16586 seconds (0h:0m:1s)
+Total wall-clock time used: 1.25176 seconds (0h:0m:1s)
+
