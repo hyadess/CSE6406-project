@@ -8,8 +8,18 @@ Reads every ``paper_subset_*`` (or any) design directory under --work-dir that
 contains a ``results/`` folder, tags rows with the design name, concatenates
 across designs, and writes a set of PNG figures comparing analysis models,
 ILS levels, and Stage 2 species-tree methods.
+
+--- Tweakable parameters ---
+Everything that controls *which* models/designs/ILS levels/sequence lengths
+go into the plots lives in the CONFIG block right below the imports. Edit
+those lists directly, or override them for a single run with the matching
+``--models`` / ``--designs`` / ``--exclude-designs`` / ``--ils`` /
+``--seq-lengths`` CLI flags (comma-separated). Leaving a CLI flag unset keeps
+the CONFIG default. Pass ``--split-by-design`` (or set SPLIT_BY_DESIGN) to
+write one PNG per design instead of combining all designs into one figure.
 """
 import argparse
+import re
 from pathlib import Path
 
 import matplotlib
@@ -18,27 +28,131 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+# ============================= CONFIG =====================================
+# All models known to the pipeline, in the order they should appear on axes
+# and legends. Trim this list to drop a model from every plot.
 MODEL_ORDER = ["gtr_g4", "gtr", "hky_g4", "hky", "jc"]
+
+# Which of the models above are actually included in a given run. Defaults
+# to "all of MODEL_ORDER"; set to e.g. ["gtr_g4", "gtr"] to only compare
+# those two everywhere.
+INCLUDE_MODELS = list(MODEL_ORDER)
+
+# Which design directories under --work-dir to include/exclude. Matched as
+# substrings against the directory name (e.g. "paper_subset_50x10" matches
+# "paper_subset_50x10_L200", "paper_subset_50x10_L800", ...).
+# None means "include everything found on disk".
+INCLUDE_DESIGNS: list[str] | None = None
+EXCLUDE_DESIGNS: list[str] = []
+
+# Which ILS levels ("low", "high") to keep. None means "keep all".
+INCLUDE_ILS: list[str] | None = None
+
+# Which sequence lengths (as they appear in the "sequence_length" column) to
+# keep. None means "keep all". Only applies to CSVs that have that column.
+INCLUDE_SEQ_LENGTHS: list[int] | None = None
+
+# By default, plots that facet by design (e.g. stage1_high_support_error,
+# stage2_species_tree_error) cram every included design into one PNG as
+# subplot rows/columns. Set this to True (or pass --split-by-design) to
+# instead write one separate PNG per design, suffixed "__<design name>".
+SPLIT_BY_DESIGN = False
+# ===========================================================================
+
 sns.set_theme(style="whitegrid", context="talk")
 
 
-def load_all(work_dir: Path, csv_name: str) -> pd.DataFrame:
+def _matches_any(name: str, substrings: list[str]) -> bool:
+    return any(s in name for s in substrings)
+
+
+def load_all(work_dir: Path, csv_name: str,
+             include_designs: list[str] | None = None,
+             exclude_designs: list[str] | None = None) -> pd.DataFrame:
     frames = []
     for design_dir in sorted(work_dir.iterdir()):
+        if not design_dir.is_dir():
+            continue
+        name = design_dir.name
+        if include_designs and not _matches_any(name, include_designs):
+            continue
+        if exclude_designs and _matches_any(name, exclude_designs):
+            continue
         csv_path = design_dir / "results" / csv_name
         if not csv_path.exists():
             continue
         df = pd.read_csv(csv_path)
-        df.insert(0, "design", design_dir.name)
+        df.insert(0, "design", name)
         frames.append(df)
     if not frames:
         raise FileNotFoundError(f"No {csv_name} found under {work_dir}/*/results")
     return pd.concat(frames, ignore_index=True)
 
 
-def order_models(df: pd.DataFrame, col: str = "analysis_model") -> pd.DataFrame:
-    df[col] = pd.Categorical(df[col], categories=MODEL_ORDER, ordered=True)
+def apply_filters(df: pd.DataFrame, models: list[str] | None = None,
+                   ils: list[str] | None = None,
+                   seq_lengths: list[int] | None = None) -> pd.DataFrame:
+    """Filter rows to the configured subset of models/ILS/sequence lengths."""
+    df = df.copy()
+    if models is not None and "analysis_model" in df.columns:
+        df = df[df["analysis_model"].isin(models)]
+    if ils is not None and "ils" in df.columns:
+        df = df[df["ils"].isin(ils)]
+    if seq_lengths is not None and "sequence_length" in df.columns:
+        df = df[df["sequence_length"].isin(seq_lengths)]
+    return df
+
+
+def order_models(df: pd.DataFrame, col: str = "analysis_model",
+                  model_order: list[str] | None = None) -> pd.DataFrame:
+    order = model_order or MODEL_ORDER
+    df[col] = pd.Categorical(df[col], categories=order, ordered=True)
     return df.sort_values(col)
+
+
+def design_group(design_name: str) -> str:
+    """Strip the trailing "_L<seq lengths>" suffix, e.g.
+
+    "paper_subset_50x10_L1600" -> "paper_subset_50x10". Useful for comparing
+    the same taxa/loci design across its different sequence lengths.
+    """
+    return re.sub(r"_L[\d_]+$", "", design_name)
+
+
+def split_frames(dfs: list[pd.DataFrame], split: bool,
+                  group_col: str = "design") -> list[tuple[str, list[pd.DataFrame]]]:
+    """Yield (filename_suffix, filtered_dfs) pairs.
+
+    When ``split`` is False, yields a single ("", dfs) pair unchanged (today's
+    behaviour: one combined multi-panel figure per plot). When True, yields
+    one pair per distinct value of ``group_col`` found across ``dfs``, each
+    filtered to just that value, so callers can write one file per design
+    instead of cramming every design into one figure.
+    """
+    if not split:
+        return [("", dfs)]
+    values: set[str] = set()
+    for df in dfs:
+        if group_col in df.columns:
+            values.update(df[group_col].unique())
+    out = []
+    for value in sorted(values):
+        filtered = [df[df[group_col] == value].copy() if group_col in df.columns else df.copy()
+                    for df in dfs]
+        out.append((f"__{value}", filtered))
+    return out
+
+
+def safe_aspect(n_cols: int, height: float, base_aspect: float, min_width: float = 6.0) -> float:
+    """Widen narrow FacetGrids (e.g. only one ``col`` value left after filtering)
+
+    so seaborn's "legend outside the grid" placement always has enough room;
+    with a too-narrow figure it can raise "left cannot be >= right" from
+    matplotlib when computing the legend's reserved margin.
+    """
+    n_cols = max(n_cols, 1)
+    needed = min_width / (n_cols * height)
+    return max(base_aspect, needed)
 
 
 def finalize_facetgrid(g: sns.FacetGrid, out_dir: Path, name: str,
@@ -99,13 +213,14 @@ def save(fig, out_dir: Path, name: str) -> None:
     print(f"wrote {path}")
 
 
-def plot_branch_error(df: pd.DataFrame, out_dir: Path) -> None:
+def plot_branch_error(df: pd.DataFrame, out_dir: Path, model_order: list[str],
+                       suffix: str = "") -> None:
     pooled = df[df["replicate"] == "pooled"] if df["replicate"].dtype == object else df
-    pooled = order_models(pooled.copy())
+    pooled = order_models(pooled.copy(), model_order=model_order)
     g = sns.catplot(
         data=pooled, x="analysis_model", y="branch_error_rate", hue="ils",
         col="design", kind="bar", height=4.5, aspect=0.9, col_wrap=2,
-        order=MODEL_ORDER, legend=True,
+        order=model_order, legend=True,
     )
     g.set_axis_labels("Analysis model", "Branch error rate")
     g.set_titles("{col_name}", size=11)
@@ -121,65 +236,73 @@ def plot_branch_error(df: pd.DataFrame, out_dir: Path) -> None:
     if g._legend is not None:
         g._legend.set_bbox_to_anchor((0.82, 0.95), transform=g.figure.transFigure)
         g._legend.set_loc("upper left")
-    g.figure.savefig(out_dir / "stage1_branch_error_by_model.png", dpi=150)
+    path = out_dir / f"stage1_branch_error_by_model{suffix}.png"
+    g.figure.savefig(path, dpi=150)
     plt.close(g.figure)
-    print(f"wrote {out_dir / 'stage1_branch_error_by_model.png'}")
+    print(f"wrote {path}")
 
 
-def plot_calibration_metrics(df: pd.DataFrame, out_dir: Path) -> None:
+def plot_calibration_metrics(df: pd.DataFrame, out_dir: Path, model_order: list[str],
+                              suffix: str = "") -> None:
     pooled = df[df["replicate"] == "pooled"] if df["replicate"].dtype == object else df
-    pooled = order_models(pooled.copy())
+    pooled = order_models(pooled.copy(), model_order=model_order)
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
     sns.barplot(data=pooled, x="analysis_model", y="brier_score", hue="ils",
-                order=MODEL_ORDER, ax=axes[0])
+                order=model_order, ax=axes[0])
     axes[0].set_title("Brier score (lower = better)")
     axes[0].set_xlabel("Analysis model")
     sns.barplot(data=pooled, x="analysis_model", y="expected_calibration_error", hue="ils",
-                order=MODEL_ORDER, ax=axes[1])
+                order=model_order, ax=axes[1])
     axes[1].set_title("Expected calibration error")
     axes[1].set_xlabel("Analysis model")
-    save(fig, out_dir, "stage1_calibration_scores")
+    save(fig, out_dir, f"stage1_calibration_scores{suffix}")
 
 
-def plot_high_support_wrong(df: pd.DataFrame, out_dir: Path) -> None:
+def plot_high_support_wrong(df: pd.DataFrame, out_dir: Path, model_order: list[str],
+                             suffix: str = "") -> None:
     pooled = df[df["replicate"] == "pooled"] if df["replicate"].dtype == object else df
-    pooled = order_models(pooled.copy())
+    pooled = order_models(pooled.copy(), model_order=model_order)
     melted = pooled.melt(
         id_vars=["design", "ils", "analysis_model"],
         value_vars=["p_wrong_given_support_ge_0.95", "p_wrong_given_support_ge_0.99"],
         var_name="threshold", value_name="p_wrong",
     )
+    aspect = safe_aspect(melted["ils"].nunique(), 3.5, 1.2)
     g = sns.catplot(
         data=melted, x="analysis_model", y="p_wrong", hue="threshold",
-        col="ils", row="design", kind="bar", order=MODEL_ORDER, height=3.5, aspect=1.2,
+        col="ils", row="design", kind="bar", order=model_order, height=3.5, aspect=aspect,
         legend_out=True,
     )
     g.set_titles(row_template="{row_name}", col_template="ILS = {col_name}", size=11)
-    finalize_facetgrid(g, out_dir, "stage1_high_support_error",
+    finalize_facetgrid(g, out_dir, f"stage1_high_support_error{suffix}",
                         ylabel="P(wrong | support >= t)", xlabel="Analysis model",
                         legend_right=True)
 
 
-def plot_calibration_curve(df: pd.DataFrame, out_dir: Path) -> None:
+def plot_calibration_curve(df: pd.DataFrame, out_dir: Path, model_order: list[str],
+                            suffix: str = "") -> None:
     df = df.copy()
     df["model"] = df["condition"].str.extract(r"model=([a-z_0-9]+)")
     df["ils"] = df["condition"].str.extract(r"ils=([a-z]+)")
-    df["model"] = pd.Categorical(df["model"], categories=MODEL_ORDER, ordered=True)
+    df = df[df["model"].isin(model_order)]
+    df["model"] = pd.Categorical(df["model"], categories=model_order, ordered=True)
+    aspect = safe_aspect(df["ils"].nunique(), 3.5, 1.2)
     g = sns.relplot(
         data=df.sort_values("mean_support"), x="mean_support", y="p_correct",
-        hue="model", hue_order=MODEL_ORDER, col="ils", row="design",
-        kind="line", marker="o", height=3.5, aspect=1.2, facet_kws={"sharex": True, "sharey": True},
+        hue="model", hue_order=model_order, col="ils", row="design",
+        kind="line", marker="o", height=3.5, aspect=aspect, facet_kws={"sharex": True, "sharey": True},
     )
     for ax in g.axes.flat:
         ax.plot([0, 1], [0, 1], ls="--", color="grey", linewidth=1)
     g.set_titles(row_template="{row_name}", col_template="ILS = {col_name}", size=11)
-    finalize_facetgrid(g, out_dir, "stage1_calibration_curve",
+    finalize_facetgrid(g, out_dir, f"stage1_calibration_curve{suffix}",
                         ylabel="Observed P(correct)", xlabel="Mean support in bin",
                         legend_right=True)
 
 
-def plot_stage2_nrf(df: pd.DataFrame, out_dir: Path) -> None:
-    df = order_models(df.copy())
+def plot_stage2_nrf(df: pd.DataFrame, out_dir: Path, model_order: list[str],
+                     suffix: str = "") -> None:
+    df = order_models(df.copy(), model_order=model_order)
     melted = df.melt(
         id_vars=["design", "ils", "replicate", "sequence_length", "analysis_model"],
         value_vars=["unweighted_nrf", "contracted_unweighted_nrf", "weighted_nrf", "hybrid_weighted_nrf"],
@@ -192,19 +315,21 @@ def plot_stage2_nrf(df: pd.DataFrame, out_dir: Path) -> None:
         "hybrid_weighted_nrf": "wASTRAL (hybrid)",
     }
     melted["method"] = melted["method"].map(method_labels)
+    aspect = safe_aspect(melted["ils"].nunique(), 3.5, 1.3)
     g = sns.catplot(
         data=melted, x="analysis_model", y="nrf", hue="method",
-        col="ils", row="design", kind="box", order=MODEL_ORDER, height=3.5, aspect=1.3,
+        col="ils", row="design", kind="box", order=model_order, height=3.5, aspect=aspect,
         legend_out=True,
     )
     g.set_titles(row_template="{row_name}", col_template="ILS = {col_name}", size=11)
-    finalize_facetgrid(g, out_dir, "stage2_species_tree_error",
+    finalize_facetgrid(g, out_dir, f"stage2_species_tree_error{suffix}",
                         ylabel="Normalized RF to true species tree", xlabel="Analysis model",
                         legend_right=True)
 
 
-def plot_stage2_deltas(df: pd.DataFrame, out_dir: Path) -> None:
-    df = order_models(df.copy())
+def plot_stage2_deltas(df: pd.DataFrame, out_dir: Path, model_order: list[str],
+                        suffix: str = "") -> None:
+    df = order_models(df.copy(), model_order=model_order)
     melted = df.melt(
         id_vars=["design", "ils", "replicate", "sequence_length", "analysis_model"],
         value_vars=["delta_weighted_minus_contracted", "delta_hybrid_minus_contracted"],
@@ -215,15 +340,16 @@ def plot_stage2_deltas(df: pd.DataFrame, out_dir: Path) -> None:
         "delta_hybrid_minus_contracted": "hybrid wASTRAL - contracted ASTRAL",
     }
     melted["contrast"] = melted["contrast"].map(contrast_labels)
+    aspect = safe_aspect(melted["ils"].nunique(), 3.5, 1.3)
     g = sns.catplot(
         data=melted, x="analysis_model", y="delta_nrf", hue="contrast",
-        col="ils", row="design", kind="box", order=MODEL_ORDER, height=3.5, aspect=1.3,
+        col="ils", row="design", kind="box", order=model_order, height=3.5, aspect=aspect,
         legend_out=True,
     )
     for ax in g.axes.flat:
         ax.axhline(0, ls="--", color="grey", linewidth=1)
     g.set_titles(row_template="{row_name}", col_template="ILS = {col_name}", size=11)
-    finalize_facetgrid(g, out_dir, "stage2_primary_contrasts",
+    finalize_facetgrid(g, out_dir, f"stage2_primary_contrasts{suffix}",
                         ylabel="Delta nRF (negative favors wASTRAL)", xlabel="Analysis model",
                         legend_right=True)
 
@@ -237,26 +363,159 @@ def plot_ils_separation(df: pd.DataFrame, out_dir: Path) -> None:
     save(fig, out_dir, "ils_separation_check")
 
 
+def plot_seq_length_effect(stage1: pd.DataFrame, stage2: pd.DataFrame,
+                            out_dir: Path, model_order: list[str]) -> None:
+    """How each model's error trends as sequence length grows, per taxa/loci design."""
+    for label, df, metric, ylabel, name in (
+        ("stage1", stage1, "branch_error_rate", "Branch error rate", "seq_length_effect_stage1"),
+        ("stage2", stage2, "contracted_unweighted_nrf", "Species-tree nRF (contracted ASTRAL)",
+         "seq_length_effect_stage2"),
+    ):
+        pooled = df
+        if "replicate" in pooled.columns and pooled["replicate"].dtype == object:
+            pooled = pooled[pooled["replicate"] == "pooled"]
+        pooled = pooled.copy()
+        pooled["design_group"] = pooled["design"].map(design_group)
+        if pooled["design_group"].nunique() < 1 or pooled["sequence_length"].nunique() < 2:
+            print(f"skipping {name}: not enough sequence-length variation")
+            continue
+        pooled = order_models(pooled, model_order=model_order)
+        aspect = safe_aspect(pooled["ils"].nunique(), 3.5, 1.2)
+        g = sns.relplot(
+            data=pooled.sort_values("sequence_length"), x="sequence_length", y=metric,
+            hue="analysis_model", hue_order=model_order, col="ils", row="design_group",
+            kind="line", marker="o", height=3.5, aspect=aspect,
+            facet_kws={"sharex": False, "sharey": True},
+        )
+        g.set_titles(row_template="{row_name}", col_template="ILS = {col_name}", size=11)
+        finalize_facetgrid(g, out_dir, name, ylabel=ylabel,
+                            xlabel="Sequence length", legend_right=True)
+
+
+def plot_model_ranking(stage1: pd.DataFrame, stage2: pd.DataFrame,
+                        out_dir: Path, model_order: list[str]) -> None:
+    """Average rank of each model (1 = best) across every design/ILS condition."""
+    pooled1 = stage1[stage1["replicate"] == "pooled"] if stage1["replicate"].dtype == object else stage1
+    rank1 = pooled1.copy()
+    rank1["rank"] = rank1.groupby(["design", "ils"])["branch_error_rate"].rank()
+    rank1["metric"] = "Stage 1 branch error rate"
+
+    rank2 = stage2.copy()
+    rank2["rank"] = rank2.groupby(["design", "ils", "replicate"])["contracted_unweighted_nrf"].rank()
+    rank2["metric"] = "Stage 2 species-tree nRF"
+
+    combined = pd.concat([
+        rank1[["analysis_model", "rank", "metric"]],
+        rank2[["analysis_model", "rank", "metric"]],
+    ], ignore_index=True)
+    combined = order_models(combined, model_order=model_order)
+
+    fig, ax = plt.subplots(figsize=(7, 5))
+    sns.barplot(data=combined, x="analysis_model", y="rank", hue="metric",
+                order=model_order, ax=ax, errorbar="ci")
+    ax.set_ylabel("Mean rank (1 = best)")
+    ax.set_xlabel("Analysis model")
+    ax.tick_params(axis="x", rotation=30)
+    save(fig, out_dir, "model_ranking_summary")
+
+
+def plot_pairwise_model_heatmap(stage1: pd.DataFrame, out_dir: Path,
+                                 model_order: list[str]) -> None:
+    """Pairwise mean-branch-error-rate difference matrix between every model pair."""
+    pooled = stage1[stage1["replicate"] == "pooled"] if stage1["replicate"].dtype == object else stage1
+    means = pooled.groupby("analysis_model")["branch_error_rate"].mean().reindex(model_order)
+    diff = pd.DataFrame(
+        [[a - b for b in means] for a in means], index=model_order, columns=model_order,
+    )
+    fig, ax = plt.subplots(figsize=(6, 5))
+    sns.heatmap(diff, annot=True, fmt=".3f", cmap="RdBu_r", center=0, ax=ax,
+                cbar_kws={"label": "Row minus column (branch error rate)"})
+    ax.set_xlabel("Model (column)")
+    ax.set_ylabel("Model (row)")
+    save(fig, out_dir, "pairwise_model_branch_error_diff")
+
+
+def plot_replicate_variability(df: pd.DataFrame, out_dir: Path, model_order: list[str],
+                                suffix: str = "") -> None:
+    """Spread of branch error rate across individual replicates (not pooled)."""
+    per_rep = df[df["replicate"] != "pooled"] if df["replicate"].dtype == object else df
+    if per_rep.empty:
+        print("skipping stage1_replicate_variability: no per-replicate rows found")
+        return
+    per_rep = order_models(per_rep.copy(), model_order=model_order)
+    aspect = safe_aspect(min(per_rep["design"].nunique(), 2), 4, 1.0)
+    g = sns.catplot(
+        data=per_rep, x="analysis_model", y="branch_error_rate", hue="ils",
+        col="design", kind="box", order=model_order, height=4, aspect=aspect, col_wrap=2,
+        legend_out=True,
+    )
+    g.set_titles("{col_name}", size=11)
+    finalize_facetgrid(g, out_dir, f"stage1_replicate_variability{suffix}",
+                        ylabel="Branch error rate (per replicate)", xlabel="Analysis model",
+                        legend_right=True)
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--work-dir", type=Path, default=Path("work"))
     parser.add_argument("--out", type=Path, default=Path("work/plots"))
+    parser.add_argument("--models", type=str, default=None,
+                         help="Comma-separated subset/order of models, e.g. 'gtr_g4,gtr'. "
+                              f"Default: {','.join(INCLUDE_MODELS)}")
+    parser.add_argument("--designs", type=str, default=None,
+                         help="Comma-separated substrings; only design dirs matching one of "
+                              "these are included. Default: all")
+    parser.add_argument("--exclude-designs", type=str, default=None,
+                         help="Comma-separated substrings; design dirs matching one of these "
+                              "are skipped")
+    parser.add_argument("--ils", type=str, default=None,
+                         help="Comma-separated ILS levels to keep, e.g. 'low,high'")
+    parser.add_argument("--seq-lengths", type=str, default=None,
+                         help="Comma-separated sequence lengths to keep, e.g. '200,800,1600'")
+    parser.add_argument("--split-by-design", action="store_true", default=SPLIT_BY_DESIGN,
+                         help="Write one PNG per design (suffixed __<design>) instead of "
+                              "faceting every design into a single combined PNG")
     args = parser.parse_args()
+
+    models = args.models.split(",") if args.models else INCLUDE_MODELS
+    designs = args.designs.split(",") if args.designs else INCLUDE_DESIGNS
+    exclude_designs = args.exclude_designs.split(",") if args.exclude_designs else EXCLUDE_DESIGNS
+    ils = args.ils.split(",") if args.ils else INCLUDE_ILS
+    seq_lengths = ([int(s) for s in args.seq_lengths.split(",")]
+                   if args.seq_lengths else INCLUDE_SEQ_LENGTHS)
+    split_by_design = args.split_by_design
 
     args.out.mkdir(parents=True, exist_ok=True)
 
-    stage1_summary = load_all(args.work_dir, "stage1_summary.csv")
-    stage1_calibration = load_all(args.work_dir, "stage1_calibration.csv")
-    stage2 = load_all(args.work_dir, "stage2_species_tree_error.csv")
-    ils_summary = load_all(args.work_dir, "ils_summary.csv")
+    stage1_summary = load_all(args.work_dir, "stage1_summary.csv", designs, exclude_designs)
+    stage1_calibration = load_all(args.work_dir, "stage1_calibration.csv", designs, exclude_designs)
+    stage2 = load_all(args.work_dir, "stage2_species_tree_error.csv", designs, exclude_designs)
+    ils_summary = load_all(args.work_dir, "ils_summary.csv", designs, exclude_designs)
 
-    plot_branch_error(stage1_summary, args.out)
-    plot_calibration_metrics(stage1_summary, args.out)
-    plot_high_support_wrong(stage1_summary, args.out)
-    plot_calibration_curve(stage1_calibration, args.out)
-    plot_stage2_nrf(stage2, args.out)
-    plot_stage2_deltas(stage2, args.out)
+    stage1_summary = apply_filters(stage1_summary, models, ils, seq_lengths)
+    stage1_calibration = apply_filters(stage1_calibration, None, ils, None)
+    stage2 = apply_filters(stage2, models, ils, seq_lengths)
+    ils_summary = apply_filters(ils_summary, None, ils, None)
+
+    # These plots facet across designs; split_frames() optionally breaks each
+    # into one call per design so every design gets its own PNG file.
+    for suffix, (df,) in split_frames([stage1_summary], split_by_design):
+        plot_branch_error(df, args.out, models, suffix=suffix)
+        plot_calibration_metrics(df, args.out, models, suffix=suffix)
+        plot_high_support_wrong(df, args.out, models, suffix=suffix)
+        plot_replicate_variability(df, args.out, models, suffix=suffix)
+    for suffix, (df,) in split_frames([stage1_calibration], split_by_design):
+        plot_calibration_curve(df, args.out, models, suffix=suffix)
+    for suffix, (df,) in split_frames([stage2], split_by_design):
+        plot_stage2_nrf(df, args.out, models, suffix=suffix)
+        plot_stage2_deltas(df, args.out, models, suffix=suffix)
+
+    # These compare across designs by construction, so they are never split.
     plot_ils_separation(ils_summary, args.out)
+    plot_seq_length_effect(stage1_summary, stage2, args.out, models)
+    plot_model_ranking(stage1_summary, stage2, args.out, models)
+    plot_pairwise_model_heatmap(stage1_summary, args.out, models)
 
 
 if __name__ == "__main__":
